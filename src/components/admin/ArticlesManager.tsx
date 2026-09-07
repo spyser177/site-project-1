@@ -1,0 +1,210 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+interface ArticleRow {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  content: string;
+  imageUrl: string | null;
+  published: boolean;
+  createdAt: string;
+}
+
+const emptyForm = { slug: "", title: "", description: "", content: "", imageUrl: "", published: false };
+
+/** Управление дополнительными статьями (создание/редактирование/удаление) */
+export function ArticlesManager() {
+  const [articles, setArticles] = useState<ArticleRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/articles");
+      if (res.ok) {
+        const json = await res.json();
+        setArticles(json.articles ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function startEdit(article: ArticleRow) {
+    setEditingId(article.id);
+    setForm({
+      slug: article.slug,
+      title: article.title,
+      description: article.description,
+      content: article.content,
+      imageUrl: article.imageUrl ?? "",
+      published: article.published,
+    });
+  }
+
+  function resetForm() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setError("");
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+
+    try {
+      const res = editingId
+        ? await fetch(`/api/admin/articles/${editingId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: form.title,
+              description: form.description,
+              content: form.content,
+              imageUrl: form.imageUrl,
+              published: form.published,
+            }),
+          })
+        : await fetch("/api/admin/articles", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form),
+          });
+
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || "Ошибка сохранения");
+        return;
+      }
+
+      resetForm();
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Удалить статью?")) return;
+    await fetch(`/api/admin/articles/${id}`, { method: "DELETE" });
+    await load();
+  }
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-8">
+      <div>
+        <h2 className="font-semibold text-[var(--color-primary)] mb-4">
+          {editingId ? "Редактирование статьи" : "Новая статья"}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-3 bg-white rounded-2xl border border-[var(--color-border)] p-5">
+          {!editingId && (
+            <input
+              placeholder="slug (латиница, дефисы)"
+              value={form.slug}
+              onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              required
+              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+            />
+          )}
+          <input
+            placeholder="Заголовок"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            required
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+          />
+          <textarea
+            placeholder="Краткое описание"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            required
+            rows={2}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+          />
+          <textarea
+            placeholder="Текст статьи"
+            value={form.content}
+            onChange={(e) => setForm({ ...form, content: e.target.value })}
+            rows={6}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+          />
+          <input
+            placeholder="URL изображения (необязательно)"
+            value={form.imageUrl}
+            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+          />
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.published}
+              onChange={(e) => setForm({ ...form, published: e.target.checked })}
+            />
+            Опубликована
+          </label>
+
+          {error && <p className="text-sm text-[var(--color-danger)]">{error}</p>}
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 rounded-full bg-[var(--color-primary)] text-white text-sm font-medium disabled:opacity-50"
+            >
+              {saving ? "Сохранение..." : editingId ? "Сохранить" : "Создать"}
+            </button>
+            {editingId && (
+              <button type="button" onClick={resetForm} className="px-4 py-2 rounded-full border border-[var(--color-border)] text-sm">
+                Отмена
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div>
+        <h2 className="font-semibold text-[var(--color-primary)] mb-4">Список статей</h2>
+        {loading ? (
+          <p className="text-sm text-[var(--color-muted)]">Загрузка...</p>
+        ) : articles.length === 0 ? (
+          <p className="text-sm text-[var(--color-muted)]">
+            Пока нет дополнительных статей, либо БД недоступна в этой среде.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {articles.map((a) => (
+              <li key={a.id} className="bg-white rounded-xl border border-[var(--color-border)] p-4 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{a.title}</p>
+                  <p className="text-xs text-[var(--color-muted)]">
+                    /{a.slug} · {a.published ? "опубликована" : "черновик"}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={() => startEdit(a)} className="text-xs text-[var(--color-primary)] hover:underline">
+                    Изменить
+                  </button>
+                  <button onClick={() => handleDelete(a.id)} className="text-xs text-[var(--color-danger)] hover:underline">
+                    Удалить
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
