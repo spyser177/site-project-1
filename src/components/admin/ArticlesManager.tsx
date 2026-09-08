@@ -23,6 +23,8 @@ export function ArticlesManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   async function load() {
     setLoading(true);
@@ -102,6 +104,33 @@ export function ArticlesManager() {
     await load();
   }
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setUploadError(json.error || "Ошибка загрузки файла");
+        return;
+      }
+
+      setForm((prev) => ({ ...prev, imageUrl: json.url }));
+    } catch {
+      setUploadError("Не удалось загрузить файл. Проверьте соединение.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
   return (
     <div className="grid lg:grid-cols-2 gap-8">
       <div>
@@ -146,6 +175,29 @@ export function ArticlesManager() {
             onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
           />
+          <div>
+            <label className="inline-flex items-center gap-2 text-xs text-[var(--color-primary)] cursor-pointer hover:underline">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={handleFileChange}
+                disabled={uploading}
+                className="hidden"
+              />
+              {uploading ? "Загрузка в S3..." : "Загрузить изображение в S3"}
+            </label>
+            {uploadError && (
+              <p className="text-xs text-[var(--color-danger)] mt-1">{uploadError}</p>
+            )}
+            {form.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={form.imageUrl}
+                alt="Превью"
+                className="mt-2 h-20 w-32 object-cover rounded-lg border border-[var(--color-border)]"
+              />
+            )}
+          </div>
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"

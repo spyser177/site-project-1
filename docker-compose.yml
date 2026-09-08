@@ -1,0 +1,104 @@
+services:
+  # ---------- PostgreSQL ----------
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-med_abort_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Порт наружу нужен только для локальной разработки/подключения GUI-клиента.
+      # На проде можно убрать секцию ports у db — приложение обращается по внутренней сети.
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-med_abort_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------- MinIO: локальный S3-совместимый бакет для разработки ----------
+  # В продакшене используйте реальный S3 (например, Timeweb Cloud) —
+  # просто укажите его в S3_ENDPOINT/S3_ACCESS_KEY/S3_SECRET_KEY в .env
+  # и не включайте этот сервис (профиль local-s3 отключён по умолчанию).
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    profiles: ["local-s3"]
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin123}
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # веб-консоль MinIO
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------- Одноразовый job: применение миграций Prisma + сид ----------
+  # Всегда собирается локально из стейджа builder (там есть prisma CLI и tsx) —
+  # это лёгкая и нечастая операция, поэтому готовый образ из registry для неё не нужен.
+  migrate:
+    build:
+      context: .
+      target: builder
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-med_abort_db}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && npm run db:seed"
+    restart: "no"
+
+  # ---------- Next.js приложение ----------
+  app:
+    image: ${IMAGE_NAME:-ghcr.io/spyser177/site-project-1}:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      target: runner
+      args:
+        # NEXT_PUBLIC_*-переменные должны быть доступны именно на этапе сборки
+        # (next build инлайнит их в бандл) — поэтому передаём их как build-args,
+        # а не только через environment/env_file (это только для runtime).
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://example.com}
+        NEXT_PUBLIC_SITE_PHONE: ${NEXT_PUBLIC_SITE_PHONE:-}
+        NEXT_PUBLIC_SITE_EMAIL: ${NEXT_PUBLIC_SITE_EMAIL:-}
+        NEXT_PUBLIC_SITE_TELEGRAM: ${NEXT_PUBLIC_SITE_TELEGRAM:-}
+        NEXT_PUBLIC_SITE_WHATSAPP: ${NEXT_PUBLIC_SITE_WHATSAPP:-}
+        NEXT_PUBLIC_SITE_ADDRESS: ${NEXT_PUBLIC_SITE_ADDRESS:-}
+        NEXT_PUBLIC_SITE_INN: ${NEXT_PUBLIC_SITE_INN:-}
+        NEXT_PUBLIC_SITE_OGRN: ${NEXT_PUBLIC_SITE_OGRN:-}
+        NEXT_PUBLIC_SITE_LEGAL_NAME: ${NEXT_PUBLIC_SITE_LEGAL_NAME:-}
+        NEXT_PUBLIC_YANDEX_METRIKA_ID: ${NEXT_PUBLIC_YANDEX_METRIKA_ID:-}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-med_abort_db}?schema=public
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  minio_data:

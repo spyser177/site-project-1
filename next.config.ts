@@ -1,17 +1,32 @@
 import type { NextConfig } from "next";
 
+/**
+ * Хост S3-хранилища вычисляется из S3_ENDPOINT, чтобы next/image разрешал
+ * загрузку только с реального бакета, а не с произвольных https-хостов.
+ * Если S3_ENDPOINT не задан (например, при первой локальной сборке без
+ * бэкенда) — используем безопасный пустой список вместо wildcard.
+ */
+function getS3RemotePattern() {
+  const endpoint = process.env.S3_ENDPOINT;
+  if (!endpoint) return [];
+  try {
+    const url = new URL(endpoint);
+    return [
+      {
+        protocol: url.protocol.replace(":", "") as "http" | "https",
+        hostname: url.hostname,
+      },
+    ];
+  } catch {
+    return [];
+  }
+}
+
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
     formats: ["image/avif", "image/webp"],
-    remotePatterns: [
-      {
-        // TODO(итерация 2): сузить до конкретного хоста S3 (Timeweb Cloud),
-        // когда будет подключена загрузка изображений в бакет.
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
+    remotePatterns: getS3RemotePattern(),
   },
   async redirects() {
     return [
