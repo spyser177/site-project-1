@@ -6,7 +6,7 @@ import { Icon } from "./Icon";
 import { siteConfig, phoneHref } from "@/lib/config";
 
 const navLinks = [
-  { href: "/glavnaya", label: "Главная" },
+  { href: "/", label: "Главная" },
   { href: "/stati", label: "Статьи" },
   { href: "/o-nas", label: "О нас" },
   { href: "/kontakty", label: "Контакты" },
@@ -20,7 +20,7 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-[var(--color-bg)]/95 backdrop-blur border-b border-[var(--color-border)]">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-4 flex items-center justify-between">
         <Link
-          href="/glavnaya"
+          href="/"
           className="font-serif text-xl font-semibold text-[var(--color-primary)]"
         >
           Мед<span className="text-[var(--color-accent)]">Информ</span>
@@ -40,6 +40,37 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+
+          <div className="flex items-center gap-2">
+            <a
+              href={siteConfig.telegram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Telegram"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#26A5E4] text-white transition-opacity hover:opacity-85"
+              data-ym-goal="telegram_click"
+            >
+              <Icon name="telegram" className="w-4 h-4" />
+            </a>
+            <a
+              href={siteConfig.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#25D366] text-white transition-opacity hover:opacity-85"
+              data-ym-goal="whatsapp_click"
+            >
+              <Icon name="whatsapp" className="w-4 h-4" />
+            </a>
+            <a
+              href={`mailto:${siteConfig.email}`}
+              aria-label="Email"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#EA4335] text-white transition-opacity hover:opacity-85"
+              data-ym-goal="email_click"
+            >
+              <Icon name="mail" className="w-4 h-4" />
+            </a>
+          </div>
         </nav>
 
         <a
@@ -51,14 +82,44 @@ export function Header() {
           {siteConfig.phone}
         </a>
 
-        <a
-          href={phoneHref()}
-          className="md:hidden p-2 text-[var(--color-primary)]"
-          aria-label="Позвонить"
-          data-ym-goal="phone_click"
-        >
-          <Icon name="phone" className="w-5 h-5" />
-        </a>
+        <div className="flex md:hidden items-center gap-1.5">
+          <a
+            href={siteConfig.telegram}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Telegram"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-[#26A5E4] text-white transition-opacity hover:opacity-85"
+            data-ym-goal="telegram_click"
+          >
+            <Icon name="telegram" className="w-4 h-4" />
+          </a>
+          <a
+            href={siteConfig.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="WhatsApp"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-[#25D366] text-white transition-opacity hover:opacity-85"
+            data-ym-goal="whatsapp_click"
+          >
+            <Icon name="whatsapp" className="w-4 h-4" />
+          </a>
+          <a
+            href={`mailto:${siteConfig.email}`}
+            aria-label="Email"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-[#EA4335] text-white transition-opacity hover:opacity-85"
+            data-ym-goal="email_click"
+          >
+            <Icon name="mail" className="w-4 h-4" />
+          </a>
+          <a
+            href={phoneHref()}
+            className="p-2 text-[var(--color-primary)]"
+            aria-label="Позвонить"
+            data-ym-goal="phone_click"
+          >
+            <Icon name="phone" className="w-5 h-5" />
+          </a>
+        </div>
       </div>
     </header>
   );

@@ -6,7 +6,7 @@ import type { IconName } from "./Icon";
 import { Icon } from "./Icon";
 
 const tabs: { href: string; label: string; icon: IconName }[] = [
-  { href: "/glavnaya", label: "Главная", icon: "molecule" },
+  { href: "/", label: "Главная", icon: "molecule" },
   { href: "/stati", label: "Статьи", icon: "list" },
   { href: "/kontakty", label: "Контакты", icon: "mail" },
 ];

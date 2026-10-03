@@ -23,7 +23,7 @@ export function Footer() {
               Навигация
             </h3>
             <ul className="space-y-2 text-sm text-white/80">
-              <li><Link href="/glavnaya" className="hover:text-white">Главная</Link></li>
+              <li><Link href="/" className="hover:text-white">Главная</Link></li>
               <li><Link href="/stati" className="hover:text-white">Статьи</Link></li>
               <li><Link href="/o-nas" className="hover:text-white">О нас</Link></li>
               <li><Link href="/kontakty" className="hover:text-white">Контакты</Link></li>
@@ -58,7 +58,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Telegram"
-                className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2.5 rounded-full bg-[#26A5E4] hover:opacity-85 transition-opacity"
                 data-ym-goal="telegram_click"
               >
                 <Icon name="telegram" className="w-5 h-5" />
@@ -68,7 +68,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
-                className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2.5 rounded-full bg-[#25D366] hover:opacity-85 transition-opacity"
                 data-ym-goal="whatsapp_click"
               >
                 <Icon name="whatsapp" className="w-5 h-5" />
@@ -76,7 +76,7 @@ export function Footer() {
               <a
                 href={`mailto:${siteConfig.email}`}
                 aria-label="Email"
-                className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2.5 rounded-full bg-[#EA4335] hover:opacity-85 transition-opacity"
                 data-ym-goal="email_click"
               >
                 <Icon name="mail" className="w-5 h-5" />
@@ -87,7 +87,9 @@ export function Footer() {
 
         <div className="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs text-white/50">
           <p>© {new Date().getFullYear()} {siteConfig.legalName}. Информационный портал.</p>
-          <p>ИНН {siteConfig.inn} · ОГРН {siteConfig.ogrn}</p>
+          <Link href="/privacy-policy" className="hover:text-white/80 underline underline-offset-2">
+            Политика обработки персональных данных
+          </Link>
         </div>
         <p className="text-xs text-white/40 mt-3 max-w-3xl">
           Материалы сайта носят общеинформационный характер и не являются публичной офертой

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Медикаментозное прерывание беременности: мифепристон, мизопростол",
   description:
     "Медикаментозное прерывание беременности: как действуют мифепристон и мизопростол, эффективность 95–98,9%, подготовка, восстановление и ответы на частые вопросы.",
-  alternates: { canonical: "/glavnaya" },
+  alternates: { canonical: "/" },
 };
 
 const advantages: { icon: IconName; title: string; text: string }[] = [
@@ -241,13 +241,6 @@ export default async function GlavnayaPage() {
                 <span className="font-medium">{t.name}</span>
                 <span>{t.date}</span>
               </div>
-              <a
-                href="#"
-                className="mt-2 text-xs text-[var(--color-accent-dark)] hover:underline"
-                rel="nofollow noopener"
-              >
-                Источник: Яндекс.Карты
-              </a>
             </Card>
           ))}
         </div>

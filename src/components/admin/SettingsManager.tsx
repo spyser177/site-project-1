@@ -23,6 +23,7 @@ export function SettingsManager() {
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -34,13 +35,20 @@ export function SettingsManager() {
   async function handleSave(key: string) {
     setSavingKey(key);
     setSavedKey(null);
+    setErrorKey(null);
     try {
-      await fetch("/api/admin/settings", {
+      const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key, value: values[key] ?? "" }),
       });
+      if (!res.ok) {
+        setErrorKey(key);
+        return;
+      }
       setSavedKey(key);
+    } catch {
+      setErrorKey(key);
     } finally {
       setSavingKey(null);
     }
@@ -79,6 +87,11 @@ export function SettingsManager() {
             </button>
             {savedKey === field.key && (
               <span className="text-xs text-[var(--color-success)]">Сохранено</span>
+            )}
+            {errorKey === field.key && (
+              <span className="text-xs text-red-600">
+                Ошибка сохранения. Попробуйте снова или войдите заново.
+              </span>
             )}
           </div>
         </div>

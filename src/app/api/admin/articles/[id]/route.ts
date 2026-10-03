@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-api";
 
@@ -39,8 +40,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const article = await prisma.article.update({ where: { id }, data: parsed.data });
     return NextResponse.json({ article });
-  } catch {
-    return NextResponse.json({ error: "Статья не найдена" }, { status: 404 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return NextResponse.json({ error: "Статья не найдена" }, { status: 404 });
+    }
+    console.error("Failed to update article", error);
+    return NextResponse.json(
+      { error: "Не удалось сохранить статью. Попробуйте позже." },
+      { status: 500 }
+    );
   }
 }
 
@@ -53,7 +61,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     await prisma.article.delete({ where: { id } });
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: "Статья не найдена" }, { status: 404 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return NextResponse.json({ error: "Статья не найдена" }, { status: 404 });
+    }
+    console.error("Failed to delete article", error);
+    return NextResponse.json(
+      { error: "Не удалось удалить статью. Попробуйте позже." },
+      { status: 500 }
+    );
   }
 }

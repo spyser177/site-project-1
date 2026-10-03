@@ -3,11 +3,11 @@ import { getAllSlugs } from "@/lib/articles";
 import { siteConfig } from "@/lib/config";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes = ["/glavnaya", "/stati", "/kontakty", "/o-nas"].map((path) => ({
+  const staticRoutes = ["/", "/stati", "/kontakty", "/o-nas"].map((path) => ({
     url: `${siteConfig.url}${path}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,
-    priority: path === "/glavnaya" ? 1 : 0.7,
+    priority: path === "/" ? 1 : 0.7,
   }));
 
   const articleRoutes = getAllSlugs().map((slug) => ({

@@ -32,6 +32,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Некорректные данные" }, { status: 400 });
   }
 
-  await setSetting(parsed.data.key, parsed.data.value);
-  return NextResponse.json({ ok: true });
+  try {
+    await setSetting(parsed.data.key, parsed.data.value);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[settings] Не удалось сохранить настройку", error);
+    return NextResponse.json(
+      { error: "Не удалось сохранить настройку. Попробуйте позже." },
+      { status: 500 }
+    );
+  }
 }

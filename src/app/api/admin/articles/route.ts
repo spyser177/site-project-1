@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-api";
 
@@ -47,10 +48,17 @@ export async function POST(request: NextRequest) {
   try {
     const article = await prisma.article.create({ data: parsed.data });
     return NextResponse.json({ article }, { status: 201 });
-  } catch {
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { error: "Статья с таким слагом уже существует" },
+        { status: 409 }
+      );
+    }
+    console.error("Failed to create article", error);
     return NextResponse.json(
-      { error: "Статья с таким слагом уже существует" },
-      { status: 409 }
+      { error: "Не удалось сохранить статью. Попробуйте позже." },
+      { status: 500 }
     );
   }
 }
