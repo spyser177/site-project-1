@@ -8,6 +8,9 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat
 
 COPY package.json package-lock.json ./
+# prisma/schema.prisma нужен уже на этом шаге: `npm ci` запускает
+# postinstall-хук `prisma generate`, которому требуется файл схемы.
+COPY prisma ./prisma
 RUN npm ci
 
 # ---------- 2. Сборка приложения ----------
