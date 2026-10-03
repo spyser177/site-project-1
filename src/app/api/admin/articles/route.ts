@@ -4,6 +4,23 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-api";
 
+const ICONS = [
+  "molecule",
+  "calendar",
+  "shield",
+  "pulse",
+  "check",
+  "list",
+  "chart",
+  "chat",
+  "clipboard",
+  "help",
+  "clock",
+  "pill",
+  "flask",
+  "heart",
+] as const;
+
 const articleSchema = z.object({
   slug: z
     .string()
@@ -12,9 +29,13 @@ const articleSchema = z.object({
     .max(150)
     .regex(/^[a-z0-9-]+$/, "Слаг может содержать только латиницу, цифры и дефис"),
   title: z.string().trim().min(3).max(200),
+  metaTitle: z.string().trim().max(200).optional().or(z.literal("")),
+  metaDescription: z.string().trim().max(500).optional().or(z.literal("")),
   description: z.string().trim().min(3).max(500),
   content: z.string().trim().max(20000).default(""),
   imageUrl: z.string().trim().url().optional().or(z.literal("")),
+  icon: z.enum(ICONS).default("molecule"),
+  keywords: z.array(z.string().trim().min(1)).default([]),
   published: z.boolean().default(false),
 });
 
@@ -46,7 +67,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const article = await prisma.article.create({ data: parsed.data });
+    const { metaTitle, metaDescription, ...rest } = parsed.data;
+    const article = await prisma.article.create({
+      data: {
+        ...rest,
+        metaTitle: metaTitle || null,
+        metaDescription: metaDescription || null,
+      },
+    });
     return NextResponse.json({ article }, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {

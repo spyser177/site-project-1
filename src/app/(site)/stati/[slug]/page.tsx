@@ -6,26 +6,25 @@ import { ArticleContent } from "@/components/ArticleContent";
 import { Icon } from "@/components/Icon";
 import { Button } from "@/components/Button";
 import {
-  ARTICLES,
+  getAllArticles,
   getArticleBySlug,
-  getAllSlugs,
   formatArticleDate,
-} from "@/lib/articles";
+} from "@/lib/articles-db";
 import { siteConfig } from "@/lib/config";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return getAllSlugs().map((slug) => ({ slug }));
-}
+// Статьи редактируются из админ-панели, поэтому страница рендерится на
+// каждый запрос и сразу отражает изменения.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug);
   if (!article) return {};
 
   return {
@@ -43,7 +42,7 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug);
   if (!article) notFound();
 
   const faqBlock = article.blocks.find((b) => b.type === "faq");
@@ -62,7 +61,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Главная", item: `${siteConfig.url}/glavnaya` },
+        { "@type": "ListItem", position: 1, name: "Главная", item: `${siteConfig.url}/` },
         { "@type": "ListItem", position: 2, name: "Статьи", item: `${siteConfig.url}/stati` },
         { "@type": "ListItem", position: 3, name: article.title },
       ],
@@ -81,7 +80,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     });
   }
 
-  const related = ARTICLES.filter((a) => a.slug !== article.slug).slice(0, 3);
+  const related = (await getAllArticles()).filter((a) => a.slug !== article.slug).slice(0, 3);
 
   return (
     <>
@@ -95,7 +94,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       <Section animate={false} className="pt-10 sm:pt-16 pb-8">
         <nav className="text-xs text-[var(--color-muted)] mb-6 flex items-center gap-1.5">
-          <Link href="/glavnaya" className="hover:text-[var(--color-primary)]">Главная</Link>
+          <Link href="/" className="hover:text-[var(--color-primary)]">Главная</Link>
           <span>/</span>
           <Link href="/stati" className="hover:text-[var(--color-primary)]">Статьи</Link>
         </nav>

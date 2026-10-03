@@ -8,6 +8,7 @@ const navItems: { href: string; label: string; icon: IconName }[] = [
   { href: "", label: "Дашборд", icon: "chart" },
   { href: "/submissions", label: "Заявки", icon: "mail" },
   { href: "/articles", label: "Статьи", icon: "list" },
+  { href: "/pages", label: "Страницы", icon: "clipboard" },
   { href: "/settings", label: "Настройки", icon: "clipboard" },
 ];
 

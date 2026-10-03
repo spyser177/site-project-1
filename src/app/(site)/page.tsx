@@ -6,10 +6,15 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { Icon, type IconName } from "@/components/Icon";
 import { HeroIllustration } from "@/components/illustrations/HeroIllustration";
 import { MechanismDiagram } from "@/components/illustrations/MechanismDiagram";
+import { ArticleContent } from "@/components/ArticleContent";
 import { getSetting } from "@/lib/settings";
+import { getPage } from "@/lib/pages";
+import { PAGE_DEFAULTS } from "@/lib/page-defaults";
+import { textToBlocks } from "@/lib/content-blocks";
 
-// Главная читает hero-заголовок/подзаголовок из SiteSetting (редактируется
-// из админ-панели), поэтому рендерится динамически на каждый запрос.
+// Главная читает hero-заголовок/подзаголовок из SiteSetting и текст о
+// механизме действия из Page (оба редактируются из админ-панели), поэтому
+// рендерится динамически на каждый запрос.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -82,6 +87,8 @@ const testimonials = [
   },
 ];
 
+const DEFAULT_MECHANISM_CONTENT = PAGE_DEFAULTS.home.content ?? "";
+
 export default async function GlavnayaPage() {
   const heroTitle = await getSetting(
     "hero_title",
@@ -91,6 +98,8 @@ export default async function GlavnayaPage() {
     "hero_subtitle",
     "Мифепристон и мизопростол — препараты для прерывания беременности на ранних сроках. Рассказываем, как действует медикаментозный аборт, какова его эффективность и что важно знать перед началом процесса."
   );
+  const homePage = await getPage("home", PAGE_DEFAULTS.home);
+  const mechanismBlocks = textToBlocks(homePage.content || DEFAULT_MECHANISM_CONTENT);
 
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -173,23 +182,7 @@ export default async function GlavnayaPage() {
         />
         <div className="grid md:grid-cols-2 gap-10 items-start">
           <div className="space-y-4 text-[var(--color-text)] leading-relaxed">
-            <p>
-              <strong>Мифепристон</strong> блокирует рецепторы прогестерона —
-              гормона, поддерживающего беременность. Это нарушает гормональную
-              поддержку и подготавливает шейку матки к следующему этапу.
-            </p>
-            <p>
-              Спустя определённый интервал принимается{" "}
-              <strong>мизопростол</strong> — он вызывает сокращения матки и
-              расширение шейки, что приводит к завершению процесса. После
-              приёма мизопростола возможны спастические боли и кровянистые
-              выделения — это ожидаемая физиологическая реакция.
-            </p>
-            <p>
-              При правильном применении на ранних сроках (до 12 недель) метод
-              считается безопасным и эффективным: эффективность комбинации
-              достигает 95–98,9%.
-            </p>
+            <ArticleContent blocks={mechanismBlocks} />
           </div>
           <MechanismDiagram />
         </div>

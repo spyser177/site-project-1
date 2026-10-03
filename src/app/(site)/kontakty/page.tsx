@@ -5,13 +5,23 @@ import { Card } from "@/components/Card";
 import { Icon, type IconName } from "@/components/Icon";
 import { ContactForm } from "@/components/ContactForm";
 import { siteConfig, phoneHref } from "@/lib/config";
+import { getPage } from "@/lib/pages";
+import { PAGE_DEFAULTS } from "@/lib/page-defaults";
 
-export const metadata: Metadata = {
-  title: "Контакты",
-  description:
-    "Свяжитесь с нами по телефону, email, Telegram или WhatsApp. Контактная форма для общих вопросов о медикаментозном прерывании беременности.",
-  alternates: { canonical: "/kontakty" },
-};
+// Текст страницы редактируется из админ-панели, поэтому рендерится
+// динамически на каждый запрос.
+export const dynamic = "force-dynamic";
+
+const DEFAULTS = PAGE_DEFAULTS.kontakty;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPage("kontakty", DEFAULTS);
+  return {
+    title: page.metaTitle ?? DEFAULTS.metaTitle,
+    description: page.metaDescription ?? DEFAULTS.metaDescription,
+    alternates: { canonical: "/kontakty" },
+  };
+}
 
 const contactItems: { icon: IconName; label: string; value: string; href: string; goal: string }[] = [
   {
@@ -51,14 +61,16 @@ const contactItems: { icon: IconName; label: string; value: string; href: string
   },
 ];
 
-export default function KontaktyPage() {
+export default async function KontaktyPage() {
+  const page = await getPage("kontakty", DEFAULTS);
+
   return (
     <Section animate={false} className="pt-14 sm:pt-20">
       <SectionHeading
         as="h1"
         eyebrow="Контакты"
-        title="Свяжитесь с нами"
-        description="Ответим на общие вопросы о медикаментозном прерывании беременности, мифепристоне и мизопростоле. Для медицинской консультации рекомендуем очный приём специалиста."
+        title={page.title ?? DEFAULTS.title ?? ""}
+        description={page.description ?? DEFAULTS.description}
       />
 
       <div className="grid md:grid-cols-2 gap-10">

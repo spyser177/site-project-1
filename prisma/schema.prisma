@@ -20,19 +20,40 @@ model ContactSubmission {
   @@index([createdAt])
 }
 
-// Дополнительные статьи, управляемые из админ-панели
+// Статьи (редактируются из админ-панели; на сайте источник правды для /stati)
 model Article {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  title       String
-  description String
-  content     String   @default("")
-  imageUrl    String?
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  metaTitle       String?
+  metaDescription String?
+  description     String
+  // Текст статьи в простой разметке (## H2, ### H3, "- " списки, "> " цитаты,
+  // "Q: "/"A: " пары для FAQ) — конвертируется в блоки через src/lib/content-blocks.ts
+  content         String    @default("")
+  imageUrl        String?
+  icon            String    @default("molecule")
+  keywords        String[]  @default([])
+  publishedAt     DateTime?
+  published       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([published, createdAt])
+}
+
+// Редактируемый контент статичных страниц сайта (О нас, Контакты,
+// Политика конфиденциальности, доп. блок на Главной)
+model Page {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String?
+  description     String?
+  metaTitle       String?
+  metaDescription String?
+  // Текст страницы в простой разметке — см. комментарий у Article.content
+  content         String   @default("")
+  updatedAt       DateTime @updatedAt
 }
 
 // Настройки сайта (редактируемые тексты)

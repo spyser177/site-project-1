@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
-import { getAllSlugs } from "@/lib/articles";
+import { getAllSlugs } from "@/lib/articles-db";
 import { siteConfig } from "@/lib/config";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = ["/", "/stati", "/kontakty", "/o-nas"].map((path) => ({
     url: `${siteConfig.url}${path}`,
     lastModified: new Date(),
@@ -10,7 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: path === "/" ? 1 : 0.7,
   }));
 
-  const articleRoutes = getAllSlugs().map((slug) => ({
+  const slugs = await getAllSlugs();
+  const articleRoutes = slugs.map((slug) => ({
     url: `${siteConfig.url}/stati/${slug}`,
     lastModified: new Date(),
     changeFrequency: "yearly" as const,

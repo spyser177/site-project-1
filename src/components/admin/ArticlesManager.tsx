@@ -2,18 +2,50 @@
 
 import { useEffect, useState } from "react";
 
+const ICONS = [
+  "molecule",
+  "calendar",
+  "shield",
+  "pulse",
+  "check",
+  "list",
+  "chart",
+  "chat",
+  "clipboard",
+  "help",
+  "clock",
+  "pill",
+  "flask",
+  "heart",
+] as const;
+
 interface ArticleRow {
   id: string;
   slug: string;
   title: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
   description: string;
   content: string;
   imageUrl: string | null;
+  icon: string;
+  keywords: string[];
   published: boolean;
   createdAt: string;
 }
 
-const emptyForm = { slug: "", title: "", description: "", content: "", imageUrl: "", published: false };
+const emptyForm = {
+  slug: "",
+  title: "",
+  metaTitle: "",
+  metaDescription: "",
+  description: "",
+  content: "",
+  imageUrl: "",
+  icon: "molecule",
+  keywords: "",
+  published: false,
+};
 
 /** Управление дополнительными статьями (создание/редактирование/удаление) */
 export function ArticlesManager() {
@@ -48,9 +80,13 @@ export function ArticlesManager() {
     setForm({
       slug: article.slug,
       title: article.title,
+      metaTitle: article.metaTitle ?? "",
+      metaDescription: article.metaDescription ?? "",
       description: article.description,
       content: article.content,
       imageUrl: article.imageUrl ?? "",
+      icon: article.icon ?? "molecule",
+      keywords: (article.keywords ?? []).join(", "),
       published: article.published,
     });
   }
@@ -67,22 +103,30 @@ export function ArticlesManager() {
     setError("");
 
     try {
+      const payload = {
+        title: form.title,
+        metaTitle: form.metaTitle,
+        metaDescription: form.metaDescription,
+        description: form.description,
+        content: form.content,
+        imageUrl: form.imageUrl,
+        icon: form.icon,
+        keywords: form.keywords
+          .split(",")
+          .map((k) => k.trim())
+          .filter(Boolean),
+        published: form.published,
+      };
       const res = editingId
         ? await fetch(`/api/admin/articles/${editingId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              title: form.title,
-              description: form.description,
-              content: form.content,
-              imageUrl: form.imageUrl,
-              published: form.published,
-            }),
+            body: JSON.stringify(payload),
           })
         : await fetch("/api/admin/articles", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
+            body: JSON.stringify({ ...payload, slug: form.slug }),
           });
 
       const json = await res.json();
@@ -163,12 +207,44 @@ export function ArticlesManager() {
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
           />
           <textarea
-            placeholder="Текст статьи"
+            placeholder="Текст статьи — поддерживается простая разметка: ## заголовок H2, ### H3, строки с «- » для списка, «> » для цитаты/врезки, «Q: »/«A: » для пар вопрос-ответ (FAQ). Абзацы разделяйте пустой строкой."
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
-            rows={6}
+            rows={10}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm font-mono"
+          />
+          <input
+            placeholder="SEO: meta title (необязательно, иначе используется заголовок)"
+            value={form.metaTitle}
+            onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
           />
+          <textarea
+            placeholder="SEO: meta description (необязательно, иначе используется краткое описание)"
+            value={form.metaDescription}
+            onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+            rows={2}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              value={form.icon}
+              onChange={(e) => setForm({ ...form, icon: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+            >
+              {ICONS.map((icon) => (
+                <option key={icon} value={icon}>
+                  {icon}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Ключевые слова, через запятую"
+              value={form.keywords}
+              onChange={(e) => setForm({ ...form, keywords: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
+            />
+          </div>
           <input
             placeholder="URL изображения (необязательно)"
             value={form.imageUrl}

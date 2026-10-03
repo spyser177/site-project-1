@@ -4,13 +4,25 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { Card } from "@/components/Card";
 import { Icon, type IconName } from "@/components/Icon";
 import { Button } from "@/components/Button";
+import { ArticleContent } from "@/components/ArticleContent";
+import { textToBlocks } from "@/lib/content-blocks";
+import { getPage } from "@/lib/pages";
+import { PAGE_DEFAULTS } from "@/lib/page-defaults";
 
-export const metadata: Metadata = {
-  title: "О нас",
-  description:
-    "О информационном портале, посвящённом медикаментозному прерыванию беременности: мифепристону, мизопростолу и общим вопросам подготовки и восстановления.",
-  alternates: { canonical: "/o-nas" },
-};
+// Текст страницы редактируется из админ-панели, поэтому рендерится
+// динамически на каждый запрос.
+export const dynamic = "force-dynamic";
+
+const DEFAULTS = PAGE_DEFAULTS["o-nas"];
+
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getPage("o-nas", DEFAULTS);
+  return {
+    title: page.metaTitle ?? DEFAULTS.metaTitle,
+    description: page.metaDescription ?? DEFAULTS.metaDescription,
+    alternates: { canonical: "/o-nas" },
+  };
+}
 
 const principles: { icon: IconName; title: string; text: string }[] = [
   {
@@ -35,15 +47,17 @@ const principles: { icon: IconName; title: string; text: string }[] = [
   },
 ];
 
-export default function ONasPage() {
+export default async function ONasPage() {
+  const page = await getPage("o-nas", DEFAULTS);
+
   return (
     <>
       <Section animate={false} className="pt-14 sm:pt-20">
         <SectionHeading
           as="h1"
           eyebrow="О портале"
-          title="Информационный портал о медикаментозном прерывании беременности"
-          description="Мы собираем и систематизируем общедоступную информацию о мифепристоне, мизопростоле и медикаментозном методе прерывания беременности, чтобы помочь читателям разобраться в теме перед обращением к специалисту."
+          title={page.title ?? DEFAULTS.title ?? ""}
+          description={page.description ?? DEFAULTS.description}
         />
       </Section>
 
@@ -66,20 +80,8 @@ export default function ONasPage() {
       </Section>
 
       <Section>
-        <div className="max-w-3xl space-y-4 text-[var(--color-text)] leading-relaxed">
-          <h2 className="text-2xl font-semibold text-[var(--color-primary)]">
-            Как устроена работа с материалами
-          </h2>
-          <p>
-            Каждая статья на портале готовится с опорой на общие данные об эффективности
-            и безопасности медикаментозного метода, включая сведения о механизме действия
-            мифепристона и мизопростола, типичных ощущениях и сроках восстановления.
-          </p>
-          <p>
-            Мы не указываем способы приобретения препаратов и не даём индивидуальных
-            медицинских назначений — все решения о конкретном лечении принимаются
-            совместно с профильным специалистом после очного осмотра и обследования.
-          </p>
+        <div className="max-w-3xl">
+          <ArticleContent blocks={textToBlocks(page.content || DEFAULTS.content || "")} />
         </div>
       </Section>
 
