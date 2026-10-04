@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withPayload } from "@payloadcms/next/withPayload";
 
 /**
  * Хост S3-хранилища вычисляется из S3_ENDPOINT, чтобы next/image разрешал
@@ -36,6 +37,10 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        // Публичный /admin остаётся заблокирован — это НЕ путь к Payload.
+        // Payload-админка намеренно смонтирована на отдельном непубличном
+        // сегменте (см. PAYLOAD_ADMIN_SEGMENT в .env и src/payload.config.ts),
+        // чтобы не обнажать существование CMS по предсказуемому адресу.
         source: "/admin",
         destination: "/404",
         permanent: false,
@@ -74,4 +79,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPayload(nextConfig);

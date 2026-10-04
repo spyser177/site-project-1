@@ -28,6 +28,8 @@ COPY . .
 # DATABASE_URL нужен только для валидации схемы при `prisma generate`,
 # реальное подключение к БД во время сборки не требуется.
 ENV DATABASE_URL="postgresql://user:password@localhost:5432/db?schema=public"
+ENV PAYLOAD_SECRET="build-time-placeholder-not-used-at-runtime"
+ENV PAYLOAD_ADMIN_SEGMENT="cms-build-placeholder"
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # NEXT_PUBLIC_*-переменные инлайнятся в JS-бандл на этапе `next build` и не
