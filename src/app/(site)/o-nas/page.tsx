@@ -7,6 +7,13 @@ import { Icon, type IconName } from "@/components/Icon";
 import { Button } from "@/components/Button";
 import { RichText } from "@/components/RichText";
 import { getPayloadClient } from "@/lib/payload";
+import {
+  getMediaAlt,
+  getMediaSrcSet,
+  getMediaUrl,
+  RESPONSIVE_SIZES_ATTR,
+  type MediaLike,
+} from "@/lib/media";
 
 // Текст страницы редактируется из админ-панели (Payload, коллекция Pages,
 // slug "o-nas"), поэтому страница рендерится динамически на каждый запрос.
@@ -37,6 +44,16 @@ async function getONasPage(): Promise<PageDoc | null> {
     limit: 1,
   });
   return (result.docs[0] as PageDoc) ?? null;
+}
+
+async function getHeroImage(): Promise<MediaLike | null> {
+  const payload = await getPayloadClient();
+  const result = await payload.find({
+    collection: "media",
+    where: { filename: { equals: "o-nas.webp" } },
+    limit: 1,
+  });
+  return (result.docs[0] as MediaLike) ?? null;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -72,7 +89,10 @@ const principles: { icon: IconName; title: string; text: string }[] = [
 ];
 
 export default async function ONasPage() {
-  const page = await getONasPage();
+  const [page, heroImage] = await Promise.all([getONasPage(), getHeroImage()]);
+  const heroUrl = getMediaUrl(heroImage);
+  const heroSrcSet = getMediaSrcSet(heroImage);
+  const heroAlt = getMediaAlt(heroImage, DEFAULTS.metaTitle);
 
   return (
     <>
@@ -83,6 +103,19 @@ export default async function ONasPage() {
           title={page?.title ?? DEFAULTS.title}
           description={page?.subtitle ?? DEFAULTS.subtitle}
         />
+
+        {heroUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={heroUrl}
+            srcSet={heroSrcSet}
+            sizes={RESPONSIVE_SIZES_ATTR}
+            alt={heroAlt}
+            width={1200}
+            height={800}
+            className="mt-8 w-full rounded-2xl object-cover max-h-[420px]"
+          />
+        )}
       </Section>
 
       <Section muted>

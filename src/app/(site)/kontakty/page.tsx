@@ -6,6 +6,13 @@ import Link from "next/link";
 import { Icon, type IconName } from "@/components/Icon";
 import { getPayloadClient } from "@/lib/payload";
 import { phoneHref, siteConfig } from "@/lib/config";
+import {
+  getMediaAlt,
+  getMediaSrcSet,
+  getMediaUrl,
+  RESPONSIVE_SIZES_ATTR,
+  type MediaLike,
+} from "@/lib/media";
 
 // Контакты и текст страницы редактируются из админ-панели (Payload:
 // global site-settings + коллекция Pages, slug "kontakty"), поэтому
@@ -38,12 +45,14 @@ const DEFAULTS = {
 
 async function getData() {
   const payload = await getPayloadClient();
-  const [settings, pageResult] = await Promise.all([
+  const [settings, pageResult, mediaResult] = await Promise.all([
     payload.findGlobal({ slug: "site-settings" }) as Promise<SiteSettingsGlobal>,
     payload.find({ collection: "pages", where: { slug: { equals: "kontakty" } }, limit: 1 }),
+    payload.find({ collection: "media", where: { filename: { equals: "kontakty.webp" } }, limit: 1 }),
   ]);
   const page = (pageResult.docs[0] as PageDoc) ?? null;
-  return { settings, page };
+  const heroImage = (mediaResult.docs[0] as MediaLike) ?? null;
+  return { settings, page, heroImage };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,7 +65,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function KontaktyPage() {
-  const { settings, page } = await getData();
+  const { settings, page, heroImage } = await getData();
+  const heroUrl = getMediaUrl(heroImage);
+  const heroSrcSet = getMediaSrcSet(heroImage);
+  const heroAlt = getMediaAlt(heroImage, DEFAULTS.metaTitle);
 
   const phone = settings.phone || siteConfig.phone;
   const email = settings.email || siteConfig.email;
@@ -111,6 +123,19 @@ export default async function KontaktyPage() {
         title={page?.title ?? DEFAULTS.title}
         description={page?.subtitle ?? DEFAULTS.subtitle}
       />
+
+      {heroUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={heroUrl}
+          srcSet={heroSrcSet}
+          sizes={RESPONSIVE_SIZES_ATTR}
+          alt={heroAlt}
+          width={1200}
+          height={800}
+          className="mb-10 w-full rounded-2xl object-cover max-h-[420px]"
+        />
+      )}
 
       <div className="grid md:grid-cols-2 gap-10">
         <div>
