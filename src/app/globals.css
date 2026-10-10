@@ -145,3 +145,69 @@ h3 {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Стилизация richText-контента из Payload (Lexical → HTML).
+   Повторяет визуальный стиль прежнего <ArticleContent/>. */
+.payload-richtext {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  color: var(--color-text);
+  line-height: 1.75;
+}
+
+.payload-richtext h2 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  padding-top: 1rem;
+}
+
+.payload-richtext h3 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  padding-top: 0.5rem;
+}
+
+.payload-richtext p {
+  color: var(--color-text);
+}
+
+.payload-richtext ul,
+.payload-richtext ol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.payload-richtext ul {
+  list-style: disc;
+}
+
+.payload-richtext ol {
+  list-style: decimal;
+}
+
+.payload-richtext a {
+  color: var(--color-accent-dark);
+  text-underline-offset: 2px;
+  text-decoration: underline;
+}
+
+.payload-richtext blockquote {
+  border-left: 4px solid var(--color-accent);
+  background-color: var(--color-surface-muted);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.payload-richtext img {
+  border-radius: 1rem;
+  max-width: 100%;
+}

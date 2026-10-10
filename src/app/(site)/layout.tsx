@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   description:
     "Информационный портал о медикаментозном прерывании беременности: как действуют мифепристон и мизопростол, подготовка, восстановление, ответы на частые вопросы.",
   robots: { index: true, follow: true },
+  verification: {
+    yandex: "a830340fde9ba796",
+  },
   openGraph: {
     type: "website",
     locale: "ru_RU",

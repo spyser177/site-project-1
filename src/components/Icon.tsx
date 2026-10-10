@@ -121,6 +121,14 @@ const paths: Record<IconName, React.ReactNode> = {
   close: <path d="M6 6l12 12M18 6 6 18" />,
 };
 
+/** Список валидных имён иконок — используется для проверки значений,
+ *  приходящих из CMS (например, поле "icon" в HomePage.advantages). */
+export const ICON_NAMES = Object.keys(paths) as IconName[];
+
+export function isIconName(value: unknown): value is IconName {
+  return typeof value === "string" && (ICON_NAMES as string[]).includes(value);
+}
+
 interface IconProps extends SVGProps<SVGSVGElement> {
   name: IconName;
 }

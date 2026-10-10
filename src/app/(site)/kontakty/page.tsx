@@ -2,107 +2,180 @@ import type { Metadata } from "next";
 import { Section } from "@/components/Section";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Card } from "@/components/Card";
+import Link from "next/link";
 import { Icon, type IconName } from "@/components/Icon";
-import { ContactForm } from "@/components/ContactForm";
-import { siteConfig, phoneHref } from "@/lib/config";
-import { getPage } from "@/lib/pages";
-import { PAGE_DEFAULTS } from "@/lib/page-defaults";
+import { getPayloadClient } from "@/lib/payload";
+import { phoneHref, siteConfig } from "@/lib/config";
 
-// Текст страницы редактируется из админ-панели, поэтому рендерится
-// динамически на каждый запрос.
+// Контакты и текст страницы редактируются из админ-панели (Payload:
+// global site-settings + коллекция Pages, slug "kontakty"), поэтому
+// страница рендерится динамически на каждый запрос.
 export const dynamic = "force-dynamic";
 
-const DEFAULTS = PAGE_DEFAULTS.kontakty;
+interface SiteSettingsGlobal {
+  phone?: string | null;
+  email?: string | null;
+  telegram?: string | null;
+  whatsapp?: string | null;
+  address?: string | null;
+}
+
+interface PageDoc {
+  title?: string | null;
+  subtitle?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+}
+
+const DEFAULTS = {
+  title: "Свяжитесь с нами",
+  subtitle:
+    "Ответим на общие вопросы о медикаментозном прерывании беременности, мифепристоне и мизопростоле. Для медицинской консультации рекомендуем очный приём специалиста.",
+  metaTitle: "Контакты",
+  metaDescription:
+    "Свяжитесь с нами по телефону, email, Telegram или WhatsApp. Контактная форма для общих вопросов о медикаментозном прерывании беременности.",
+};
+
+async function getData() {
+  const payload = await getPayloadClient();
+  const [settings, pageResult] = await Promise.all([
+    payload.findGlobal({ slug: "site-settings" }) as Promise<SiteSettingsGlobal>,
+    payload.find({ collection: "pages", where: { slug: { equals: "kontakty" } }, limit: 1 }),
+  ]);
+  const page = (pageResult.docs[0] as PageDoc) ?? null;
+  return { settings, page };
+}
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getPage("kontakty", DEFAULTS);
+  const { page } = await getData();
   return {
-    title: page.metaTitle ?? DEFAULTS.metaTitle,
-    description: page.metaDescription ?? DEFAULTS.metaDescription,
+    title: page?.metaTitle ?? DEFAULTS.metaTitle,
+    description: page?.metaDescription ?? DEFAULTS.metaDescription,
     alternates: { canonical: "/kontakty" },
   };
 }
 
-const contactItems: { icon: IconName; label: string; value: string; href: string; goal: string }[] = [
-  {
-    icon: "mapPin",
-    label: "Адрес",
-    value: siteConfig.address,
-    href: "#",
-    goal: "address_view",
-  },
-  {
-    icon: "phone",
-    label: "Телефон",
-    value: siteConfig.phone,
-    href: phoneHref(),
-    goal: "phone_click",
-  },
-  {
-    icon: "mail",
-    label: "Email",
-    value: siteConfig.email,
-    href: `mailto:${siteConfig.email}`,
-    goal: "email_click",
-  },
-  {
-    icon: "telegram",
-    label: "Telegram",
-    value: "Написать в Telegram",
-    href: siteConfig.telegram,
-    goal: "telegram_click",
-  },
-  {
-    icon: "whatsapp",
-    label: "WhatsApp",
-    value: "Написать в WhatsApp",
-    href: siteConfig.whatsapp,
-    goal: "whatsapp_click",
-  },
-];
-
 export default async function KontaktyPage() {
-  const page = await getPage("kontakty", DEFAULTS);
+  const { settings, page } = await getData();
+
+  const phone = settings.phone || siteConfig.phone;
+  const email = settings.email || siteConfig.email;
+  const telegram = settings.telegram || siteConfig.telegram;
+  const whatsapp = settings.whatsapp || siteConfig.whatsapp;
+  const address = settings.address || siteConfig.address;
+
+  const contactItems: { icon: IconName; label: string; value: string; href: string; goal: string }[] = [
+    { icon: "mapPin", label: "Адрес", value: address, href: "#", goal: "address_view" },
+    { icon: "phone", label: "Телефон", value: phone, href: phoneHref(phone), goal: "phone_click" },
+    { icon: "mail", label: "Email", value: email, href: `mailto:${email}`, goal: "email_click" },
+    { icon: "telegram", label: "Telegram", value: "Написать в Telegram", href: telegram, goal: "telegram_click" },
+    { icon: "whatsapp", label: "WhatsApp", value: "Написать в WhatsApp", href: whatsapp, goal: "whatsapp_click" },
+  ];
+
+  const helpItems: { emoji: string; title: string; description: string; href: string; goal: string }[] = [
+    {
+      emoji: "📞",
+      title: "Позвоните",
+      description: "если нужна быстрая консультация",
+      href: phoneHref(phone),
+      goal: "phone_click",
+    },
+    {
+      emoji: "✈️",
+      title: "Напишите в Telegram",
+      description: "если удобно в мессенджере",
+      href: telegram,
+      goal: "telegram_click",
+    },
+    {
+      emoji: "💬",
+      title: "Напишите в WhatsApp",
+      description: "если предпочитаете его",
+      href: whatsapp,
+      goal: "whatsapp_click",
+    },
+    {
+      emoji: "✉️",
+      title: "Отправьте email",
+      description: "если нужен развёрнутый ответ",
+      href: `mailto:${email}`,
+      goal: "email_click",
+    },
+  ];
 
   return (
     <Section animate={false} className="pt-14 sm:pt-20">
       <SectionHeading
         as="h1"
         eyebrow="Контакты"
-        title={page.title ?? DEFAULTS.title ?? ""}
-        description={page.description ?? DEFAULTS.description}
+        title={page?.title ?? DEFAULTS.title}
+        description={page?.subtitle ?? DEFAULTS.subtitle}
       />
 
       <div className="grid md:grid-cols-2 gap-10">
-        <div className="space-y-3">
-          {contactItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              target={item.href.startsWith("http") ? "_blank" : undefined}
-              rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="flex items-center gap-4 p-4 rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors bg-[var(--color-surface)]"
-              data-ym-goal={item.goal}
-            >
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                style={{ backgroundColor: "var(--color-surface-muted)" }}
+        <div>
+          <div className="space-y-3">
+            {contactItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                target={item.href.startsWith("http") ? "_blank" : undefined}
+                rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                className="flex items-center gap-4 p-4 rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors bg-[var(--color-surface)]"
+                data-ym-goal={item.goal}
               >
-                <Icon name={item.icon} className="w-5 h-5 text-[var(--color-primary)]" />
-              </div>
-              <div>
-                <p className="text-xs text-[var(--color-muted)]">{item.label}</p>
-                <p className="font-medium text-[var(--color-text)]">{item.value}</p>
-              </div>
-            </a>
-          ))}
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: "var(--color-surface-muted)" }}
+                >
+                  <Icon name={item.icon} className="w-5 h-5 text-[var(--color-primary)]" />
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--color-muted)]">{item.label}</p>
+                  <p className="font-medium text-[var(--color-text)]">{item.value}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <p className="mt-4 text-xs text-[var(--color-muted)]">
+            Нажимая на кнопку, вы соглашаетесь с{" "}
+            <Link href="/privacy-policy" className="underline hover:text-[var(--color-primary)]">
+              политикой обработки персональных данных
+            </Link>
+            .
+          </p>
         </div>
 
         <Card>
           <h2 className="text-xl font-semibold text-[var(--color-primary)] mb-5">
-            Написать нам
+            Как мы можем помочь
           </h2>
-          <ContactForm />
+          <div className="space-y-4">
+            {helpItems.map((item) => (
+              <a
+                key={item.title}
+                href={item.href}
+                target={item.href.startsWith("http") ? "_blank" : undefined}
+                rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                className="flex items-start gap-4 group"
+                data-ym-goal={item.goal}
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl"
+                  style={{ backgroundColor: "var(--color-surface-muted)" }}
+                >
+                  <span aria-hidden="true">{item.emoji}</span>
+                </div>
+                <div>
+                  <p className="font-medium text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors">
+                    {item.title}
+                  </p>
+                  <p className="text-sm text-[var(--color-muted)]">{item.description}</p>
+                </div>
+              </a>
+            ))}
+          </div>
         </Card>
       </div>
     </Section>

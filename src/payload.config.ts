@@ -6,6 +6,13 @@ import { buildConfig } from "payload";
 import sharp from "sharp";
 
 import { migrations } from "./migrations";
+import { Articles } from "./payload/collections/Articles";
+import { Media } from "./payload/collections/Media";
+import { Pages } from "./payload/collections/Pages";
+import { SiteSettings } from "./payload/globals/SiteSettings";
+import { HomePage } from "./payload/globals/HomePage";
+import { HeaderSettings } from "./payload/globals/HeaderSettings";
+import { FooterSettings } from "./payload/globals/FooterSettings";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -26,14 +33,6 @@ export default buildConfig({
 
   // Секретный ключ для хэширования/шифрования (сессии, сброс пароля и т.д.)
   secret: process.env.PAYLOAD_SECRET || "",
-
-  // Rich Text редактор (@payloadcms/richtext-lexical) пока НЕ подключаем:
-  // его скомпилированный dist содержит top-level await, который ломает
-  // CLI-загрузчик конфига на связке payload@3.90 + Node 20/22
-  // (ERR_REQUIRE_ASYNC_MODULE, открытый баг payloadcms/payload#16378).
-  // Пакет установлен в package.json на будущее — подключить lexicalEditor()
-  // можно, когда апстрим починит загрузку ESM-зависимостей с top-level await,
-  // либо когда появятся richText-поля и понадобится редактор.
 
   // Повторно используем DATABASE_URL проекта (та же Postgres-база, что и у
   // Prisma) — отдельная переменная DATABASE_URI не нужна, чтобы не держать
@@ -73,7 +72,12 @@ export default buildConfig({
       },
       fields: [],
     },
+    Media,
+    Articles,
+    Pages,
   ],
+
+  globals: [SiteSettings, HomePage, HeaderSettings, FooterSettings],
 
   // Переносим корневые маршруты Payload под секретный префикс, подальше от
   // публичного /admin (см. комментарий к adminSegment выше).

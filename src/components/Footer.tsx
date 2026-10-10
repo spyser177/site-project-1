@@ -1,9 +1,42 @@
 import Link from "next/link";
 import { Icon } from "./Icon";
+import { getPayloadClient } from "@/lib/payload";
 import { siteConfig, phoneHref } from "@/lib/config";
 
-/** Футер сайта: контакты, навигация, реквизиты компании-заглушки */
-export function Footer() {
+interface FooterSettingsDoc {
+  phone?: string | null;
+  telegram_url?: string | null;
+  whatsapp_url?: string | null;
+  email?: string | null;
+  legal_name?: string | null;
+  inn?: string | null;
+  ogrn?: string | null;
+  copyright?: string | null;
+}
+
+/**
+ * Футер сайта: контакты, соцсети и юридические реквизиты редактируются
+ * из footer-settings в Payload. Серверный асинхронный компонент — читает
+ * глобал при каждом рендере страницы, поэтому изменения из админки видны
+ * сразу, без ручной инвалидации кэша.
+ */
+export async function Footer() {
+  let settings: FooterSettingsDoc | null = null;
+  try {
+    const payload = await getPayloadClient();
+    settings = (await payload.findGlobal({ slug: "footer-settings" })) as FooterSettingsDoc;
+  } catch (error) {
+    console.warn("[Footer] Не удалось получить footer-settings из Payload", error);
+  }
+
+  const phone = settings?.phone || siteConfig.phone;
+  const telegram = settings?.telegram_url || siteConfig.telegram;
+  const whatsapp = settings?.whatsapp_url || siteConfig.whatsapp;
+  const email = settings?.email || siteConfig.email;
+  const legalName = settings?.legal_name || siteConfig.legalName;
+  const copyright =
+    settings?.copyright || `© ${new Date().getFullYear()} ${legalName}. Информационный портал.`;
+
   return (
     <footer className="bg-[var(--color-primary-dark)] text-white mt-auto">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-12">
@@ -36,13 +69,13 @@ export function Footer() {
             </h3>
             <ul className="space-y-3 text-sm text-white/80">
               <li>
-                <a href={phoneHref()} className="flex items-center gap-2 hover:text-white" data-ym-goal="phone_click">
-                  <Icon name="phone" className="w-4 h-4" /> {siteConfig.phone}
+                <a href={phoneHref(phone)} className="flex items-center gap-2 hover:text-white" data-ym-goal="phone_click">
+                  <Icon name="phone" className="w-4 h-4" /> {phone}
                 </a>
               </li>
               <li>
-                <a href={`mailto:${siteConfig.email}`} className="flex items-center gap-2 hover:text-white" data-ym-goal="email_click">
-                  <Icon name="mail" className="w-4 h-4" /> {siteConfig.email}
+                <a href={`mailto:${email}`} aria-label="Email" className="flex items-center gap-2 hover:text-white" data-ym-goal="email_click">
+                  <Icon name="mail" className="w-4 h-4" />
                 </a>
               </li>
             </ul>
@@ -54,7 +87,7 @@ export function Footer() {
             </h3>
             <div className="flex items-center gap-3">
               <a
-                href={siteConfig.telegram}
+                href={telegram}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Telegram"
@@ -64,7 +97,7 @@ export function Footer() {
                 <Icon name="telegram" className="w-5 h-5" />
               </a>
               <a
-                href={siteConfig.whatsapp}
+                href={whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
@@ -74,7 +107,7 @@ export function Footer() {
                 <Icon name="whatsapp" className="w-5 h-5" />
               </a>
               <a
-                href={`mailto:${siteConfig.email}`}
+                href={`mailto:${email}`}
                 aria-label="Email"
                 className="p-2.5 rounded-full bg-[#EA4335] hover:opacity-85 transition-opacity"
                 data-ym-goal="email_click"
@@ -86,7 +119,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs text-white/50">
-          <p>© {new Date().getFullYear()} {siteConfig.legalName}. Информационный портал.</p>
+          <p>{copyright}</p>
           <Link href="/privacy-policy" className="hover:text-white/80 underline underline-offset-2">
             Политика обработки персональных данных
           </Link>

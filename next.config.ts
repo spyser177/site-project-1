@@ -50,6 +50,29 @@ const nextConfig: NextConfig = {
         destination: "/404",
         permanent: false,
       },
+      // Статьи, у которых slug был изменён после публикации, но Яндекс
+      // уже успел проиндексировать старые URL. Эти редиректы сохраняют
+      // ссылочный вес и устраняют 404 в Вебмастере Яндекса.
+      {
+        source: "/stati/podgotovka-k-priemu-mifepristona-osnovnye-rekomendatsii",
+        destination: "/stati/podgotovka-k-priemu-mifepristona-rekomendacii",
+        permanent: true,
+      },
+      {
+        source: "/stati/mifepriston-i-mizoprostol-voprosy-effektivnosti-i-bezopasnosti",
+        destination: "/stati/mifepriston-i-mizoprostol-effektivnost-i-bezopasnost",
+        permanent: true,
+      },
+      {
+        source: "/stati/chto-takoe-medikamentoznyy-metod-i-ego-otlichie-ot-drugih-podhodov",
+        destination: "/stati/chto-takoe-medikamentoznyy-metod-i-otlichie-ot-drugih-podhodov",
+        permanent: true,
+      },
+      {
+        source: "/stati/mifepriston-i-mizoprostol-vozmozhnye-pobochnye-effekty",
+        destination: "/stati/mifepriston-i-mizoprostol-pobochnye-effekty",
+        permanent: true,
+      },
     ];
   },
   async headers() {

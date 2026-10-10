@@ -87,6 +87,12 @@ services:
       NODE_ENV: production
     ports:
       - "3000:3000"
+    volumes:
+      # Файлы Media (Payload upload.staticDir = /app/public/media) должны
+      # сохраняться на хосте, а не внутри контейнера — иначе они теряются
+      # при каждом пересоздании/обновлении контейнера, а сама директория
+      # может не существовать в образе, что приводит к 500 при загрузке.
+      - ./public/media:/app/public/media
     depends_on:
       db:
         condition: service_healthy

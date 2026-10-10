@@ -3,14 +3,14 @@
 import Script from "next/script";
 import { siteConfig } from "@/lib/config";
 
-/** Яндекс.Метрика — загрузка через defer/lazyOnload, не блокирует рендеринг */
+/** Яндекс.Метрика — загрузка через afterInteractive */
 export function YandexMetrika() {
   const id = siteConfig.yandexMetrikaId;
   if (!id) return null;
 
   return (
     <>
-      <Script id="yandex-metrika" strategy="lazyOnload">
+      <Script id="yandex-metrika" strategy="afterInteractive">
         {`
           (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
           m[i].l=1*new Date();

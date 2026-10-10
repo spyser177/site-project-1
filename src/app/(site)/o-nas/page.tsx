@@ -1,25 +1,49 @@
 import type { Metadata } from "next";
+import type { SerializedEditorState } from "lexical";
 import { Section } from "@/components/Section";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Card } from "@/components/Card";
 import { Icon, type IconName } from "@/components/Icon";
 import { Button } from "@/components/Button";
-import { ArticleContent } from "@/components/ArticleContent";
-import { textToBlocks } from "@/lib/content-blocks";
-import { getPage } from "@/lib/pages";
-import { PAGE_DEFAULTS } from "@/lib/page-defaults";
+import { RichText } from "@/components/RichText";
+import { getPayloadClient } from "@/lib/payload";
 
-// Текст страницы редактируется из админ-панели, поэтому рендерится
-// динамически на каждый запрос.
+// Текст страницы редактируется из админ-панели (Payload, коллекция Pages,
+// slug "o-nas"), поэтому страница рендерится динамически на каждый запрос.
 export const dynamic = "force-dynamic";
 
-const DEFAULTS = PAGE_DEFAULTS["o-nas"];
+interface PageDoc {
+  title?: string | null;
+  subtitle?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  content?: SerializedEditorState | null;
+}
+
+const DEFAULTS = {
+  title: "Информационный портал о медикаментозном прерывании беременности",
+  subtitle:
+    "Мы собираем и систематизируем общедоступную информацию о мифепристоне, мизопростоле и медикаментозном методе прерывания беременности, чтобы помочь читателям разобраться в теме перед обращением к специалисту.",
+  metaTitle: "О нас",
+  metaDescription:
+    "О информационном портале, посвящённом медикаментозному прерыванию беременности: мифепристону, мизопростолу и общим вопросам подготовки и восстановления.",
+};
+
+async function getONasPage(): Promise<PageDoc | null> {
+  const payload = await getPayloadClient();
+  const result = await payload.find({
+    collection: "pages",
+    where: { slug: { equals: "o-nas" } },
+    limit: 1,
+  });
+  return (result.docs[0] as PageDoc) ?? null;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getPage("o-nas", DEFAULTS);
+  const page = await getONasPage();
   return {
-    title: page.metaTitle ?? DEFAULTS.metaTitle,
-    description: page.metaDescription ?? DEFAULTS.metaDescription,
+    title: page?.metaTitle ?? DEFAULTS.metaTitle,
+    description: page?.metaDescription ?? DEFAULTS.metaDescription,
     alternates: { canonical: "/o-nas" },
   };
 }
@@ -48,7 +72,7 @@ const principles: { icon: IconName; title: string; text: string }[] = [
 ];
 
 export default async function ONasPage() {
-  const page = await getPage("o-nas", DEFAULTS);
+  const page = await getONasPage();
 
   return (
     <>
@@ -56,8 +80,8 @@ export default async function ONasPage() {
         <SectionHeading
           as="h1"
           eyebrow="О портале"
-          title={page.title ?? DEFAULTS.title ?? ""}
-          description={page.description ?? DEFAULTS.description}
+          title={page?.title ?? DEFAULTS.title}
+          description={page?.subtitle ?? DEFAULTS.subtitle}
         />
       </Section>
 
@@ -79,11 +103,13 @@ export default async function ONasPage() {
         </div>
       </Section>
 
-      <Section>
-        <div className="max-w-3xl">
-          <ArticleContent blocks={textToBlocks(page.content || DEFAULTS.content || "")} />
-        </div>
-      </Section>
+      {page?.content && (
+        <Section>
+          <div className="max-w-3xl">
+            <RichText data={page.content} />
+          </div>
+        </Section>
+      )}
 
       <Section muted animate={false}>
         <div className="text-center max-w-2xl mx-auto">

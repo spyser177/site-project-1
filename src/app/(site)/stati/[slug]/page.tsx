@@ -1,59 +1,95 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { SerializedEditorState } from "lexical";
 import { Section } from "@/components/Section";
-import { ArticleContent } from "@/components/ArticleContent";
+import { RichText } from "@/components/RichText";
 import { Icon } from "@/components/Icon";
 import { Button } from "@/components/Button";
-import {
-  getAllArticles,
-  getArticleBySlug,
-  formatArticleDate,
-} from "@/lib/articles-db";
+import { formatArticleDate, type ArticleCardData } from "@/components/ArticleCard";
+import { getMediaAlt, getMediaUrl } from "@/lib/media";
+import { getPayloadClient } from "@/lib/payload";
 import { siteConfig } from "@/lib/config";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Статьи редактируются из админ-панели, поэтому страница рендерится на
-// каждый запрос и сразу отражает изменения.
+interface ArticleDoc extends ArticleCardData {
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  content?: SerializedEditorState | null;
+  keywords?: string | null;
+  imageAlt?: string | null;
+}
+
+// Статьи редактируются из админ-панели (Payload), поэтому страница
+// рендерится на каждый запрос и сразу отражает изменения.
 export const dynamic = "force-dynamic";
+
+async function findArticle(slug: string): Promise<ArticleDoc | null> {
+  const payload = await getPayloadClient();
+  const result = await payload.find({
+    collection: "articles",
+    where: { slug: { equals: slug }, isPublished: { equals: true } },
+    limit: 1,
+    depth: 1,
+  });
+  return (result.docs[0] as unknown as ArticleDoc) ?? null;
+}
 
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = await getArticleBySlug(slug);
+  const article = await findArticle(slug);
   if (!article) return {};
 
+  const title = article.metaTitle || article.title;
+  const description = article.metaDescription || article.excerpt || undefined;
+
   return {
-    title: article.metaTitle,
-    description: article.metaDescription,
+    title,
+    description,
     alternates: { canonical: `/stati/${article.slug}` },
     openGraph: {
-      title: article.metaTitle,
-      description: article.metaDescription,
+      title,
+      description,
       type: "article",
-      publishedTime: article.date,
+      publishedTime: article.publishedAt || article.createdAt || undefined,
     },
   };
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = await getArticleBySlug(slug);
+  const article = await findArticle(slug);
   if (!article) notFound();
 
-  const faqBlock = article.blocks.find((b) => b.type === "faq");
+  const payload = await getPayloadClient();
+  const relatedResult = await payload.find({
+    collection: "articles",
+    where: {
+      isPublished: { equals: true },
+      slug: { not_equals: article.slug },
+    },
+    sort: "-publishedAt",
+    limit: 3,
+  });
+  const related = relatedResult.docs as unknown as ArticleCardData[];
+
+  const date = article.publishedAt || article.createdAt;
+  const imageUrl = getMediaUrl(article.image ?? null);
+  const imageAlt = article.imageAlt || getMediaAlt(article.image ?? null, article.title);
+
   const jsonLd: Record<string, unknown>[] = [
     {
       "@context": "https://schema.org",
       "@type": "Article",
       headline: article.title,
-      description: article.metaDescription,
-      datePublished: article.date,
-      dateModified: article.date,
+      description: article.metaDescription || article.excerpt,
+      datePublished: date,
+      dateModified: date,
       author: { "@type": "Organization", name: siteConfig.legalName },
       publisher: { "@type": "Organization", name: siteConfig.legalName },
     },
@@ -67,20 +103,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       ],
     },
   ];
-
-  if (faqBlock && faqBlock.type === "faq") {
-    jsonLd.push({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: faqBlock.items.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    });
-  }
-
-  const related = (await getAllArticles()).filter((a) => a.slug !== article.slug).slice(0, 3);
 
   return (
     <>
@@ -104,24 +126,32 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               className="w-11 h-11 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: "var(--color-surface-muted)" }}
             >
-              <Icon name={article.icon} className="w-5 h-5 text-[var(--color-primary)]" />
+              <Icon name="molecule" className="w-5 h-5 text-[var(--color-primary)]" />
             </div>
-            <time dateTime={article.date} className="text-sm text-[var(--color-muted)]">
-              {formatArticleDate(article.date)}
-            </time>
+            {date && (
+              <time dateTime={date} className="text-sm text-[var(--color-muted)]">
+                {formatArticleDate(date)}
+              </time>
+            )}
           </div>
           <h1 className="text-3xl sm:text-4xl font-semibold text-[var(--color-primary)] leading-tight">
             {article.title}
           </h1>
-          <p className="mt-4 text-lg text-[var(--color-muted)] leading-relaxed">
-            {article.description}
-          </p>
+          {article.excerpt && (
+            <p className="mt-4 text-lg text-[var(--color-muted)] leading-relaxed">
+              {article.excerpt}
+            </p>
+          )}
+          {imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imageUrl} alt={imageAlt} className="mt-6 w-full rounded-2xl object-cover max-h-96" />
+          )}
         </div>
       </Section>
 
       <Section animate={false} className="pt-0">
         <div className="max-w-3xl">
-          <ArticleContent blocks={article.blocks} />
+          <RichText data={article.content} />
         </div>
       </Section>
 
@@ -140,25 +170,27 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </div>
       </Section>
 
-      <Section animate={false}>
-        <h2 className="text-2xl font-semibold text-[var(--color-primary)] mb-6">
-          Похожие статьи
-        </h2>
-        <div className="grid sm:grid-cols-3 gap-5">
-          {related.map((a) => (
-            <Link
-              key={a.slug}
-              href={`/stati/${a.slug}`}
-              className="block rounded-2xl border border-[var(--color-border)] p-5 hover:border-[var(--color-primary)] transition-colors"
-            >
-              <Icon name={a.icon} className="w-5 h-5 text-[var(--color-primary)] mb-3" />
-              <h3 className="font-semibold text-sm text-[var(--color-primary)] line-clamp-2">
-                {a.title}
-              </h3>
-            </Link>
-          ))}
-        </div>
-      </Section>
+      {related.length > 0 && (
+        <Section animate={false}>
+          <h2 className="text-2xl font-semibold text-[var(--color-primary)] mb-6">
+            Похожие статьи
+          </h2>
+          <div className="grid sm:grid-cols-3 gap-5">
+            {related.map((a) => (
+              <Link
+                key={a.slug}
+                href={`/stati/${a.slug}`}
+                className="block rounded-2xl border border-[var(--color-border)] p-5 hover:border-[var(--color-primary)] transition-colors"
+              >
+                <Icon name="molecule" className="w-5 h-5 text-[var(--color-primary)] mb-3" />
+                <h3 className="font-semibold text-sm text-[var(--color-primary)] line-clamp-2">
+                  {a.title}
+                </h3>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      )}
     </>
   );
 }
