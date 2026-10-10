@@ -73,6 +73,11 @@ const nextConfig: NextConfig = {
         destination: "/stati/mifepriston-i-mizoprostol-pobochnye-effekty",
         permanent: true,
       },
+      {
+        source: "/stati/medikamentoznyy-metod-opyt-zhenshchin-i-mnenie-spetsialistov",
+        destination: "/stati/medikamentoznyy-metod-opyt-zhenshchin-i-mnenie-specialistov",
+        permanent: true,
+      },
     ];
   },
   async headers() {
