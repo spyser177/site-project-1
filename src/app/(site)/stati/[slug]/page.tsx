@@ -7,7 +7,7 @@ import { RichText } from "@/components/RichText";
 import { Icon } from "@/components/Icon";
 import { Button } from "@/components/Button";
 import { formatArticleDate, type ArticleCardData } from "@/components/ArticleCard";
-import { getMediaAlt, getMediaUrl } from "@/lib/media";
+import { getMediaAlt, getMediaUrl, getMediaSrcSet, RESPONSIVE_SIZES_ATTR } from "@/lib/media";
 import { getPayloadClient } from "@/lib/payload";
 import { siteConfig } from "@/lib/config";
 
@@ -81,6 +81,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const date = article.publishedAt || article.createdAt;
   const imageUrl = getMediaUrl(article.image ?? null);
   const imageAlt = article.imageAlt || getMediaAlt(article.image ?? null, article.title);
+  // Адаптивные размеры изображения под заголовком: mobile/tablet/desktop из
+  // Media.imageSizes — браузер сам выберет подходящий вариант по ширине
+  // вьюпорта (srcset + sizes), без необходимости грузить десктопную версию
+  // на телефоне.
+  const imageSrcSet = getMediaSrcSet(article.image ?? null);
 
   const jsonLd: Record<string, unknown>[] = [
     {
@@ -144,7 +149,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           )}
           {imageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt={imageAlt} className="mt-6 w-full rounded-2xl object-cover max-h-96" />
+            <img
+              src={imageUrl}
+              srcSet={imageSrcSet}
+              sizes={imageSrcSet ? RESPONSIVE_SIZES_ATTR : undefined}
+              alt={imageAlt}
+              loading="eager"
+              className="mt-6 w-full rounded-2xl object-cover max-h-96"
+            />
           )}
         </div>
       </Section>

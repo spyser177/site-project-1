@@ -207,7 +207,18 @@ h3 {
   color: var(--color-text);
 }
 
-.payload-richtext img {
+.payload-richtext img,
+.payload-richtext-image {
+  display: block;
+  width: 100%;
+  height: auto;
   border-radius: 1rem;
   max-width: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 480px) {
+  .payload-richtext-image {
+    border-radius: 0.75rem;
+  }
 }
