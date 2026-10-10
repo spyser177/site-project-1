@@ -11,7 +11,6 @@ import {
   getMediaAlt,
   getMediaSrcSet,
   getMediaUrl,
-  RESPONSIVE_SIZES_ATTR,
   type MediaLike,
 } from "@/lib/media";
 
@@ -109,11 +108,11 @@ export default async function ONasPage() {
           <img
             src={heroUrl}
             srcSet={heroSrcSet}
-            sizes={RESPONSIVE_SIZES_ATTR}
+            sizes="(max-width: 480px) 480px, (max-width: 768px) 768px, 800px"
             alt={heroAlt}
             width={1200}
             height={800}
-            className="mt-8 w-full rounded-2xl object-cover max-h-[420px]"
+            className="mt-8 w-full max-w-[800px] mx-auto rounded-2xl object-cover max-h-[420px]"
           />
         )}
       </Section>
