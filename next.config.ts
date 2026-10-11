@@ -95,16 +95,20 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // HTML/страницы НЕ должны кэшироваться браузером/CDN надолго —
-        // иначе после blue-green-деплоя пользователь долго получает старый
-        // HTML, который ссылается на уже удалённые JS-чанки предыдущего
-        // билда. "no-cache" заставляет клиента/CDN ревалидировать на каждый
-        // запрос (но не запрещает кэширование полностью, как no-store).
+        // HTML/страницы: короткий max-age вместо жёсткого no-cache —
+        // no-cache заставлял CDN (Gcore) ревалидировать на каждый запрос,
+        // добавляя round-trip CDN→origin на каждый визит и регрессию LCP.
+        // max-age=30 позволяет CDN/браузеру отдать HTML из кэша до 30с,
+        // существенно меньше 24ч retention старых чанков в static-cache/ (см.
+        // scripts/zero-downtime-deploy.sh), поэтому zero-downtime не нарушается: даже если
+        // клиент/CDN отдаст старый HTML до 30 секунд после деплоя, ссылки на
+        // старые чанки всё ещё будут отвечать с диска (гораздо дольше, чем 30с).
+        // must-revalidate гарантирует, что после истечения max-age кэш не использует stale.
         source: "/((?!_next/static|_next/image|favicon.ico).*)",
         headers: [
           {
             key: "Cache-Control",
-            value: "no-cache, must-revalidate",
+            value: "max-age=30, must-revalidate",
           },
         ],
       },
