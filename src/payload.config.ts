@@ -26,7 +26,14 @@ const dirname = path.dirname(filename);
  * (UI + REST API) смонтирована под случайным непубличным сегментом, который
  * не фигурирует ни в сайтмапе, ни в ссылках, ни в robots.txt.
  */
-const adminSegment = process.env.PAYLOAD_ADMIN_SEGMENT || "cms-admin";
+// Docker Compose передаёт значения из env_file "как есть", без снятия
+// кавычек (в отличие от большинства dotenv-парсеров) — если в .env по
+// ошибке указано значение в кавычках (PAYLOAD_ADMIN_SEGMENT="cms-xxx"),
+// они попадают в itemized URL (/"cms-xxx"/api/media/file/...) и ломают
+// все ссылки на медиа. Снимаем кавычки защитно, чтобы такая опечатка в
+// .env не приводила к 404 на изображениях по всему сайту.
+const adminSegment =
+  (process.env.PAYLOAD_ADMIN_SEGMENT || "cms-admin").trim().replace(/^["']|["']$/g, "");
 
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SITE_URL || undefined,
