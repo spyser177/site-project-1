@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { SerializedEditorState } from "lexical";
 import { Section } from "@/components/Section";
 import { SectionHeading } from "@/components/SectionHeading";
@@ -142,6 +143,22 @@ export default async function ONasPage() {
           </div>
         </Section>
       )}
+
+      <Section animate={false}>
+        <div className="max-w-3xl text-[var(--color-muted)]">
+          <p>
+            Больше материалов о медикаментозном прерывании беременности — в разделе{" "}
+            <Link href="/stati" className="underline text-[var(--color-primary)] hover:text-[var(--color-accent-dark)]">
+              «Статьи»
+            </Link>
+            . Если у вас остались общие вопросы, перейдите на страницу{" "}
+            <Link href="/kontakty" className="underline text-[var(--color-primary)] hover:text-[var(--color-accent-dark)]">
+              «Контакты»
+            </Link>
+            .
+          </p>
+        </div>
+      </Section>
 
       <Section muted animate={false}>
         <div className="text-center max-w-2xl mx-auto">

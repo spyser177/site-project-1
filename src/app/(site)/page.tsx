@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Section } from "@/components/Section";
@@ -103,6 +104,13 @@ export default async function GlavnayaPage() {
                 Задать вопрос
               </Button>
             </div>
+            <p className="mt-4 text-sm text-[var(--color-muted)]">
+              Узнайте больше о принципах нашей работы на странице{" "}
+              <Link href="/o-nas" className="underline hover:text-[var(--color-primary)]">
+                «О нас»
+              </Link>
+              .
+            </p>
           </div>
           <div className="justify-self-center w-full max-w-sm">
             <HeroIllustration className="w-full h-auto" />

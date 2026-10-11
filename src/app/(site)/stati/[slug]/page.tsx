@@ -67,16 +67,34 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!article) notFound();
 
   const payload = await getPayloadClient();
-  const relatedResult = await payload.find({
+
+  // «Читайте также»: подбираем статьи с общими тегами, при их отсутствии —
+  // просто свежие опубликованные статьи, кроме текущей.
+  const articleTags = (article.tags ?? []).map((t) => t.tag).filter(Boolean);
+
+  const otherResult = await payload.find({
     collection: "articles",
     where: {
       isPublished: { equals: true },
       slug: { not_equals: article.slug },
     },
     sort: "-publishedAt",
-    limit: 3,
+    limit: 50,
   });
-  const related = relatedResult.docs as unknown as ArticleCardData[];
+  const otherArticles = otherResult.docs as unknown as ArticleCardData[];
+
+  const scored = otherArticles
+    .map((a) => {
+      const aTags = (a.tags ?? []).map((t) => t.tag);
+      const sharedCount = aTags.filter((t) => articleTags.includes(t)).length;
+      return { article: a, sharedCount };
+    })
+    .sort((a, b) => b.sharedCount - a.sharedCount);
+
+  const hasTagMatches = scored.some((s) => s.sharedCount > 0);
+  const related = (hasTagMatches ? scored.filter((s) => s.sharedCount > 0) : scored)
+    .slice(0, 4)
+    .map((s) => s.article);
 
   const date = article.publishedAt || article.createdAt;
   const imageUrl = getMediaUrl(article.image ?? null);
@@ -167,27 +185,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </div>
       </Section>
 
-      <Section muted animate={false}>
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-semibold text-[var(--color-primary)]">
-            Остались вопросы?
-          </h2>
-          <p className="mt-3 text-[var(--color-muted)]">
-            Свяжитесь с нами — поможем разобраться в общих вопросах о медикаментозном
-            прерывании беременности.
-          </p>
-          <div className="mt-6">
-            <Button href="/kontakty" variant="accent">Связаться с нами</Button>
-          </div>
-        </div>
-      </Section>
-
       {related.length > 0 && (
         <Section animate={false}>
           <h2 className="text-2xl font-semibold text-[var(--color-primary)] mb-6">
-            Похожие статьи
+            Читайте также
           </h2>
-          <div className="grid sm:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {related.map((a) => (
               <Link
                 key={a.slug}
@@ -203,6 +206,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
         </Section>
       )}
+
+      <Section muted animate={false}>
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl font-semibold text-[var(--color-primary)]">
+            Остались вопросы?
+          </h2>
+          <p className="mt-3 text-[var(--color-muted)]">
+            Свяжитесь с нами — поможем разобраться в общих вопросах о медикаментозном
+            прерывании беременности.
+          </p>
+          <div className="mt-6">
+            <Button href="/kontakty" variant="accent">Связаться с нами</Button>
+          </div>
+        </div>
+      </Section>
     </>
   );
 }

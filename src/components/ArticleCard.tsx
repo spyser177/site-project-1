@@ -11,6 +11,7 @@ export interface ArticleCardData {
   createdAt?: string | null;
   image?: { url?: string | null; alt?: string | null } | number | string | null;
   imageAlt?: string | null;
+  tags?: { tag: string }[] | null;
 }
 
 /** Форматирует дату публикации статьи в читаемый русский формат. */

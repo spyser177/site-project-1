@@ -202,6 +202,20 @@ export default async function KontaktyPage() {
           </div>
         </Card>
       </div>
+
+      <div className="mt-10 max-w-3xl mx-auto text-center text-sm text-[var(--color-muted)]">
+        <p>
+          Узнайте больше о нашем портале на странице{" "}
+          <Link href="/o-nas" className="underline text-[var(--color-primary)] hover:text-[var(--color-accent-dark)]">
+            «О нас»
+          </Link>{" "}
+          или почитайте{" "}
+          <Link href="/stati" className="underline text-[var(--color-primary)] hover:text-[var(--color-accent-dark)]">
+            статьи о медикаментозном прерывании беременности
+          </Link>
+          .
+        </p>
+      </div>
     </Section>
   );
 }
