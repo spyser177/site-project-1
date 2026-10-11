@@ -33,7 +33,7 @@ const manropeLatin = localFont({
   ],
   variable: "--font-manrope-lat",
   display: "swap",
-  preload: false,
+  preload: true,
 });
 
 const loraCyrillic = localFont({
@@ -57,7 +57,7 @@ const loraLatin = localFont({
   ],
   variable: "--font-lora-lat",
   display: "swap",
-  preload: false,
+  preload: true,
 });
 
 /** Класс для <html>, подключающий все переменные шрифтов */
