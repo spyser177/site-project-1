@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' }}
     steps:
-      - name: Deploy via SSH (git pull + rebuild + restart)
+      - name: Deploy via SSH (zero-downtime blue-green)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
@@ -100,7 +100,7 @@ jobs:
             # Собираем образ прямо на сервере из актуального кода и .env —
             # так NEXT_PUBLIC_*-переменные гарантированно берутся из
             # реального серверного .env, без дублирования секретов в GitHub.
-            docker compose run --rm migrate
-            docker compose up -d --build --remove-orphans
-            docker image prune -f
+            # Деплой через blue-green скрипт — без простоя сайта и без
+            # разрыва ссылок на старые JS-чанки (см. DEPLOYMENT.md).
+            bash scripts/zero-downtime-deploy.sh
 

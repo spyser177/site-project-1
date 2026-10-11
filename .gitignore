@@ -46,3 +46,7 @@ prisma/*.db
 
 # media uploads (Payload)
 public/media/
+
+# zero-downtime deploy runtime state (генерируется scripts/zero-downtime-deploy.sh на сервере)
+/static-cache/
+.deploy_active_port

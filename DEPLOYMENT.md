@@ -104,10 +104,100 @@ docker compose up -d --build
      `/opt/site-project-1`
 
 После этого каждый push в `main` будет автоматически выполнять на сервере:
-`git pull` → `docker compose run --rm migrate` → `docker compose up -d --build`.
+`git pull` → `bash scripts/zero-downtime-deploy.sh` (см. раздел
+«Zero-downtime деплой» ниже).
 
 Если переменная `DEPLOY_ENABLED` не установлена в `true` — job `deploy`
 пропускается, публикация образа в GHCR при этом всё равно происходит.
+
+## Zero-downtime деплой (blue-green)
+
+### Проблема
+
+При наивном `docker compose up -d --build` старый контейнер `app`
+останавливается и удаляется, а новый поднимается на его месте. Между этими
+моментами есть окно, когда:
+
+- сайт недоступен (контейнер пересоздаётся);
+- у пользователей, чей браузер/CDN уже отдал старый HTML, браузер пытается
+  догрузить старые JS-чанки `/_next/static/<buildId>/...` — а отдавать их
+  уже нечему, потому что старый контейнер мёртв, а новый знает только о
+  чанках нового билда → `404` / `ERR_CONNECTION_RESET` / React-ошибка
+  "Application error: a client-side exception has occurred".
+
+### Решение
+
+Используется **blue-green деплой** (`scripts/zero-downtime-deploy.sh`):
+
+1. Применяются миграции БД (`docker compose run --rm migrate`).
+2. Собирается новый образ и запускается **второй, параллельный** контейнер
+   `app` на свободном порту (3001/3002, попеременно) — старый контейнер при
+   этом продолжает обслуживать трафик.
+3. Новый контейнер проверяется через `/api/health` (до 60 секунд). Если
+   health check не проходит — деплой прерывается, старый контейнер не
+   трогается (нулевой риск падения прода из-за плохого билда).
+4. Содержимое `.next/static` нового билда копируется на хост в
+   `static-cache/<buildId>/` — именно оттуда Nginx отдаёт `/_next/static/*`
+   напрямую с диска (`alias`), в обход контейнеров.
+5. Nginx-upstream (`/etc/nginx/conf.d/feminform_upstream.conf`) переключается
+   на порт нового контейнера, конфигурация применяется через
+   `nginx -s reload` — это graceful-перечитывание, которое не рвёт уже
+   открытые соединения и не создаёт простоя.
+6. После паузы (15 секунд, чтобы отработали in-flight запросы) старый
+   контейнер останавливается и удаляется. Его статика в `static-cache/`
+   **не удаляется** — старые чанки остаются доступны.
+7. Директории `static-cache/<buildId>/` старше 24 часов удаляются
+   автоматически при следующем деплое (при необходимости можно дополнительно
+   навесить cron: `find static-cache -maxdepth 1 -mmin +1440 -exec rm -rf {} +`).
+
+### Кэширование HTML и статики
+
+Чтобы раздел 4–7 имел смысл, важно, что отдаётся с каким `Cache-Control`
+(настроено в `next.config.ts` → `headers()`):
+
+- **HTML/страницы** — `Cache-Control: no-cache, must-revalidate`. Браузер и
+  CDN (Gcore) обязаны ревалидировать на каждый запрос, поэтому не держат
+  неделями HTML со ссылками на уже удалённые чанки.
+- **`/_next/static/*`** — `Cache-Control: public, max-age=31536000,
+  immutable`. Путь содержит хэш билда (`buildId`), поэтому файл по этому URL
+  физически никогда не меняется — агрессивное кэширование безопасно, а
+  старые версии продолжают быть доступны благодаря `static-cache/`.
+
+На стороне Gcore CDN следует включить "Respect origin headers"/аналог для
+`Cache-Control`, чтобы CDN не кэшировал HTML дольше, чем разрешает источник,
+и чтобы purge кэша CDN для HTML не требовался вручную при каждом деплое
+(статика с хэшем в пути и так safe to cache бессрочно).
+
+### Требования к Nginx (один раз)
+
+В конфиг сайта (`/etc/nginx/conf.d/domains/feminform.com.conf`) должны быть:
+
+```nginx
+include /etc/nginx/conf.d/feminform_upstream.conf;
+
+server {
+    ...
+    location ^~ /_next/static/ {
+        alias /var/www/feminform.com/static-cache/;
+        access_log off;
+        try_files $uri @app;
+    }
+
+    location @app {
+        proxy_pass http://feminform_app;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    location / {
+        proxy_pass http://feminform_app;
+        ...
+    }
+}
+```
+
+Файл `feminform_upstream.conf` создаётся и обновляется автоматически
+скриптом деплоя — вручную его трогать не нужно.
 
 Если вместо пересборки на сервере вы предпочитаете разворачивать именно
 готовый образ из GHCR (`docker compose pull app`) — дополнительно задайте в

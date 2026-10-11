@@ -95,6 +95,24 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // HTML/страницы НЕ должны кэшироваться браузером/CDN надолго —
+        // иначе после blue-green-деплоя пользователь долго получает старый
+        // HTML, который ссылается на уже удалённые JS-чанки предыдущего
+        // билда. "no-cache" заставляет клиента/CDN ревалидировать на каждый
+        // запрос (но не запрещает кэширование полностью, как no-store).
+        source: "/((?!_next/static|_next/image|favicon.ico).*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, must-revalidate",
+          },
+        ],
+      },
+      {
+        // Чанки с хэшем в пути — неизменяемы, кэшируем агрессивно и
+        // надолго и на CDN, и в браузере. Старые чанки продолжают
+        // отдаваться Nginx прямо с диска (static-cache/<buildId>) минимум
+        // 24 часа после деплоя — см. scripts/zero-downtime-deploy.sh.
         source: "/_next/static/:path*",
         headers: [
           {
