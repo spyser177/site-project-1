@@ -30,12 +30,12 @@
   --color-success: #6b9c7d;
   --color-danger: #c1584a;
 
-  /* --- Шрифты (локальные, self-hosted) --- */
+  /* --- Шрифты (локальные, self-hosted, только кириллица — сайт русскоязычный) --- */
   --font-sans:
-    var(--font-manrope-cyr), var(--font-manrope-lat), system-ui, -apple-system,
-    "Segoe UI", Roboto, sans-serif;
+    var(--font-manrope-cyr), system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
   --font-serif:
-    var(--font-lora-cyr), var(--font-lora-lat), Georgia, "Times New Roman", serif;
+    var(--font-lora-cyr), Georgia, "Times New Roman", serif;
 }
 
 @media (prefers-color-scheme: dark) {

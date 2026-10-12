@@ -4,10 +4,15 @@ import localFont from "next/font/local";
  * Локальные самохостящиеся шрифты (без Google Fonts CDN).
  * Manrope — основной текст, Lora — заголовки (спокойный гуманистический сериф).
  *
- * Кириллица и латиница поставляются как раздельные файлы (Fontsource),
- * поэтому каждый скрипт подключается отдельным вызовом localFont и
- * объединяется в общий font-stack через CSS-переменные (браузер сам
- * выбирает файл, в котором есть нужный глиф).
+ * Сайт полностью русскоязычный, поэтому latin-подсеты (Fontsource) НЕ
+ * подключаются — они не используются ни в одном видимом тексте, но ранее
+ * грузились как отдельные @font-face (9 файлов, ~156 КБ), увеличивая
+ * initial payload и бьющий по порогу ТСПУ на российских маршрутах.
+ * Латинские буквы (редкие аббревиатуры и т.п.) рендерятся через системный
+ * fallback-шрифт в конце font-stack (см. --font-sans/--font-serif в globals.css).
+ *
+ * Вес 800 (extrabold) у Manrope не используется ни в Tailwind-классах,
+ * ни в CSS — исключён, чтобы не грузить лишний файл.
  */
 
 const manropeCyrillic = localFont({
@@ -16,25 +21,11 @@ const manropeCyrillic = localFont({
     { path: "../../public/fonts/manrope-cyrillic-500.woff2", weight: "500", style: "normal" },
     { path: "../../public/fonts/manrope-cyrillic-600.woff2", weight: "600", style: "normal" },
     { path: "../../public/fonts/manrope-cyrillic-700.woff2", weight: "700", style: "normal" },
-    { path: "../../public/fonts/manrope-cyrillic-800.woff2", weight: "800", style: "normal" },
   ],
   variable: "--font-manrope-cyr",
   display: "swap",
-  // preload:true на массиве из 5 файлов преload-ит ВСЕ 5 весов сразу —
+  // preload:true на массиве из 4 файлов преload-ит ВСЕ 4 веса сразу —
   // это конкурирует за полосу пропускания с LCP-ресурсом. Отключено намеренно.
-  preload: false,
-});
-
-const manropeLatin = localFont({
-  src: [
-    { path: "../../public/fonts/manrope-latin-400.woff2", weight: "400", style: "normal" },
-    { path: "../../public/fonts/manrope-latin-500.woff2", weight: "500", style: "normal" },
-    { path: "../../public/fonts/manrope-latin-600.woff2", weight: "600", style: "normal" },
-    { path: "../../public/fonts/manrope-latin-700.woff2", weight: "700", style: "normal" },
-    { path: "../../public/fonts/manrope-latin-800.woff2", weight: "800", style: "normal" },
-  ],
-  variable: "--font-manrope-lat",
-  display: "swap",
   preload: false,
 });
 
@@ -51,18 +42,6 @@ const loraCyrillic = localFont({
   // CSS-переменная, браузер матчит файл по font-weight). Preload этой группы
   // отключён, чтобы не тянуть все 4 файла разом — точечный preload-hint для
   // LCP-файла (600) объявлен отдельно ниже.
-  preload: false,
-});
-
-const loraLatin = localFont({
-  src: [
-    { path: "../../public/fonts/lora-latin-400.woff2", weight: "400", style: "normal" },
-    { path: "../../public/fonts/lora-latin-500.woff2", weight: "500", style: "normal" },
-    { path: "../../public/fonts/lora-latin-600.woff2", weight: "600", style: "normal" },
-    { path: "../../public/fonts/lora-latin-700.woff2", weight: "700", style: "normal" },
-  ],
-  variable: "--font-lora-lat",
-  display: "swap",
   preload: false,
 });
 
@@ -89,8 +68,6 @@ const loraCyrillic600Preload = localFont({
 /** Класс для <html>, подключающий все переменные шрифтов */
 export const fontVariables = [
   manropeCyrillic.variable,
-  manropeLatin.variable,
   loraCyrillic.variable,
-  loraLatin.variable,
   loraCyrillic600Preload.variable,
 ].join(" ");

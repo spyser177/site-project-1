@@ -49,6 +49,24 @@ export default function RootLayout({
 
   return (
     <html lang="ru" className={fontVariables}>
+      {/*
+       * Явный preload критичного шрифта для LCP-текста (H1 в hero-секции
+       * использует font-serif → Lora Cyrillic, вес 600 — см. globals.css).
+       * next/font с preload:true не генерирует автоматически <link rel="preload">,
+       * потому что объект шрифта создаётся в src/lib/fonts.ts и используется
+       * здесь только как CSS-переменная (fontVariables), а не напрямую в этом
+       * файле — автоматическое отслеживание next/font работает только при
+       * использовании font.className/font.variable в том же модуле, где вызван
+       * localFont(). Поэтому приоритетный шрифт заголовка преолоадим вручную,
+       * чтобы браузер начал грузить его сразу, не дожидаясь парсинга CSS.
+       */}
+      <link
+        rel="preload"
+        href="/_next/static/media/6df5f53114fbb9c4-s.p.woff2"
+        as="font"
+        type="font/woff2"
+        crossOrigin="anonymous"
+      />
       <body className="min-h-screen flex flex-col antialiased">
         <script
           type="application/ld+json"
