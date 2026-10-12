@@ -136,38 +136,25 @@ const nextConfig: NextConfig = {
     // укладывался в порог ТСПУ. На dev и на сервере не трогаем —
     // не влияет на ТСПУ и усложнит отладку.
     if (!isServer && !dev) {
-      // Первая версия (глобальный maxSize + отключённые default/vendors)
-      // раздробила бандл на 167 HTTP-запросов (многие по ~2 КБ) — слишком
-      // много round-trip'ов, регрессия производительности хуже, чем выигрыш
-      // от обхода ТСПУ. Поэтому maxSize применяем ТОЧЕЧНО только к
-      // конкретным крупным группам (react/react-dom, next-runtime, крупные
-      // отдельные модули >40 КБ), а не глобально — это режет именно
-      // react-dom (172 КБ) и next-runtime (166 КБ) на ~8-9 кусков <20 КБ,
-      // не трогая остальной граф модулей.
       config.optimization.splitChunks = {
         chunks: "all",
+        maxSize: 20000,
+        minSize: 5000,
+        maxInitialRequests: 30,
+        maxAsyncRequests: 30,
         cacheGroups: {
+          default: false,
+          vendors: false,
           framework: {
             chunks: "all",
             name: "framework",
-            test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+            test: /[\\/]node_modules[\\/](react|react-dom|scheduler|next)[\\/]/,
             priority: 40,
             enforce: true,
-            maxSize: 20000,
-            minSize: 10000,
-          },
-          nextRuntime: {
-            chunks: "all",
-            name: "next-runtime",
-            test: /[\\/]node_modules[\\/]next[\\/]/,
-            priority: 35,
-            enforce: true,
-            maxSize: 20000,
-            minSize: 10000,
           },
           lib: {
             test(module: { size: () => number }) {
-              return module.size() > 40000;
+              return module.size() > 100000;
             },
             name(module: { identifier: () => string }) {
               const crypto = require("crypto");
@@ -180,8 +167,11 @@ const nextConfig: NextConfig = {
             priority: 30,
             minChunks: 1,
             reuseExistingChunk: true,
-            maxSize: 20000,
-            minSize: 10000,
+          },
+          commons: {
+            name: "commons",
+            minChunks: 2,
+            priority: 20,
           },
         },
       };
