@@ -127,6 +127,57 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  webpack: (config, { isServer, dev }) => {
+    // ТСПУ (российская система блокировки) обрывает TLS-соединение, если
+    // ОДИН HTTP-ответ превышает ~25-30 КБ (см. тест с Range-запросами к
+    // CSS-чанку: два запроса <25 КБ каждый прошли полностью, тогда как
+    // цельный файл 34881 байт рвался). Поэтому на проде режем клиентские
+    // JS-чанки на куски <20 КБ (raw, до gzip), чтобы каждый HTTP-ответ
+    // укладывался в порог ТСПУ. На dev и на сервере не трогаем —
+    // не влияет на ТСПУ и усложнит отладку.
+    if (!isServer && !dev) {
+      config.optimization.splitChunks = {
+        chunks: "all",
+        maxSize: 20000,
+        minSize: 5000,
+        maxInitialRequests: 30,
+        maxAsyncRequests: 30,
+        cacheGroups: {
+          default: false,
+          vendors: false,
+          framework: {
+            chunks: "all",
+            name: "framework",
+            test: /[\\/]node_modules[\\/](react|react-dom|scheduler|next)[\\/]/,
+            priority: 40,
+            enforce: true,
+          },
+          lib: {
+            test(module: { size: () => number }) {
+              return module.size() > 100000;
+            },
+            name(module: { identifier: () => string }) {
+              const crypto = require("crypto");
+              const hash = crypto
+                .createHash("sha1")
+                .update(module.identifier())
+                .digest("hex");
+              return hash.substring(0, 8);
+            },
+            priority: 30,
+            minChunks: 1,
+            reuseExistingChunk: true,
+          },
+          commons: {
+            name: "commons",
+            minChunks: 2,
+            priority: 20,
+          },
+        },
+      };
+    }
+    return config;
+  },
 };
 
 export default withPayload(nextConfig);
