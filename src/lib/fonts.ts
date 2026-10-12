@@ -20,7 +20,9 @@ const manropeCyrillic = localFont({
   ],
   variable: "--font-manrope-cyr",
   display: "swap",
-  preload: true,
+  // preload:true на массиве из 5 файлов преload-ит ВСЕ 5 весов сразу —
+  // это конкурирует за полосу пропускания с LCP-ресурсом. Отключено намеренно.
+  preload: false,
 });
 
 const manropeLatin = localFont({
@@ -33,7 +35,7 @@ const manropeLatin = localFont({
   ],
   variable: "--font-manrope-lat",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 const loraCyrillic = localFont({
@@ -45,7 +47,11 @@ const loraCyrillic = localFont({
   ],
   variable: "--font-lora-cyr",
   display: "swap",
-  preload: true,
+  // Фактический @font-face для веса 600 всё равно рендерится отсюда (единая
+  // CSS-переменная, браузер матчит файл по font-weight). Preload этой группы
+  // отключён, чтобы не тянуть все 4 файла разом — точечный preload-hint для
+  // LCP-файла (600) объявлен отдельно ниже.
+  preload: false,
 });
 
 const loraLatin = localFont({
@@ -57,6 +63,26 @@ const loraLatin = localFont({
   ],
   variable: "--font-lora-lat",
   display: "swap",
+  preload: false,
+});
+
+/**
+ * Точечный preload ТОЛЬКО для lora-cyrillic-600.woff2 — это шрифт LCP-элемента:
+ * h1/h2/h3 рендерятся через var(--font-serif) с font-weight 600 (см. globals.css),
+ * и именно h1 на главной (text-4xl/5xl font-semibold) является LCP-элементом.
+ *
+ * Файл подключён отдельным вызовом localFont исключительно ради preload-хинта
+ * в <head> (Next.js генерирует <link rel="preload" as="font"> для каждого
+ * localFont с preload:true). Сам текст по-прежнему рендерится через font-face
+ * из loraCyrillic выше — переменная --font-lora-cyr-600-preload нигде не
+ * используется в CSS, чтобы не задваивать @font-face объявления.
+ */
+const loraCyrillic600Preload = localFont({
+  src: "../../public/fonts/lora-cyrillic-600.woff2",
+  weight: "600",
+  style: "normal",
+  variable: "--font-lora-cyr-600-preload",
+  display: "swap",
   preload: true,
 });
 
@@ -66,4 +92,5 @@ export const fontVariables = [
   manropeLatin.variable,
   loraCyrillic.variable,
   loraLatin.variable,
+  loraCyrillic600Preload.variable,
 ].join(" ");
