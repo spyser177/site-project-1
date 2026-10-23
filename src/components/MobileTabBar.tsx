@@ -8,6 +8,7 @@ import { Icon } from "./Icon";
 const tabs: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Главная", icon: "molecule" },
   { href: "/stati", label: "Статьи", icon: "list" },
+  { href: "/kalculator-beremennosti", label: "Калькулятор", icon: "calendar" },
   { href: "/kontakty", label: "Контакты", icon: "mail" },
 ];
 
@@ -28,7 +29,7 @@ export function MobileTabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
+              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium leading-tight text-center transition-colors ${
                 active
                   ? "text-[var(--color-accent-dark)]"
                   : "text-[var(--color-muted)]"
