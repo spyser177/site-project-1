@@ -10,6 +10,7 @@ import { siteConfig, phoneHref } from "@/lib/config";
 const defaultMenu = [
   { label: "Главная", link: "/" },
   { label: "Статьи", link: "/stati" },
+  { label: "Калькулятор беременности", link: "/kalculator-beremennosti" },
   { label: "О нас", link: "/o-nas" },
   { label: "Контакты", link: "/kontakty" },
 ];
