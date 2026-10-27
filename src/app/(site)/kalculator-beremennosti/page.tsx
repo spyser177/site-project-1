@@ -51,6 +51,15 @@ export default function PregnancyCalculatorPage() {
           </Link>
           .
         </p>
+        <p className="mt-2">
+          Смотрите также:{" "}
+          <Link
+            href="/test-na-beremennost"
+            className="underline text-[var(--color-primary)] hover:text-[var(--color-accent-dark)]"
+          >
+            Тест на беременность →
+          </Link>
+        </p>
       </div>
     </Section>
   );
