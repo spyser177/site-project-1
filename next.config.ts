@@ -95,20 +95,20 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // HTML/страницы: короткий max-age вместо жёсткого no-cache —
-        // no-cache заставлял CDN (Gcore) ревалидировать на каждый запрос,
-        // добавляя round-trip CDN→origin на каждый визит и регрессию LCP.
-        // max-age=30 позволяет CDN/браузеру отдать HTML из кэша до 30с,
-        // существенно меньше 24ч retention старых чанков в static-cache/ (см.
-        // scripts/zero-downtime-deploy.sh), поэтому zero-downtime не нарушается: даже если
-        // клиент/CDN отдаст старый HTML до 30 секунд после деплоя, ссылки на
-        // старые чанки всё ещё будут отвечать с диска (гораздо дольше, чем 30с).
-        // must-revalidate гарантирует, что после истечения max-age кэш не использует stale.
+        // HTML/страницы: отключаем кэширование полностью (no-store).
+        // Страницы рендерятся через SSR (force-dynamic) и телефон/контакты
+        // читаются из Payload на каждый запрос — поэтому любое кэширование
+        // HTML (CDN/браузер) приводит к "прыгающему" номеру телефона между
+        // страницами и визитами до истечения TTL. no-store гарантирует, что
+        // CDN (Gcore) и браузер всегда идут на origin за свежим HTML.
+        // Trade-off: это возвращает round-trip CDN→origin на каждый визит
+        // (небольшая регрессия LCP по сравнению с max-age=30), но устраняет
+        // рассинхронизацию контента, что в данном случае приоритетнее.
         source: "/((?!_next/static|_next/image|favicon.ico).*)",
         headers: [
           {
             key: "Cache-Control",
-            value: "max-age=30, must-revalidate",
+            value: "no-store, must-revalidate",
           },
         ],
       },
