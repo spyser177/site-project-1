@@ -12,7 +12,7 @@ const fields: { key: string; label: string; fallback: string; multiline?: boolea
     key: "hero_subtitle",
     label: "Подзаголовок главной страницы",
     fallback:
-      "Мифепристон и мизопростол — препараты для прерывания беременности на ранних сроках.",
+      "Мифепристон и мизопростол - препараты для прерывания беременности на ранних сроках.",
     multiline: true,
   },
 ];

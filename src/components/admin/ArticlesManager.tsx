@@ -207,7 +207,7 @@ export function ArticlesManager() {
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm"
           />
           <textarea
-            placeholder="Текст статьи — поддерживается простая разметка: ## заголовок H2, ### H3, строки с «- » для списка, «> » для цитаты/врезки, «Q: »/«A: » для пар вопрос-ответ (FAQ). Абзацы разделяйте пустой строкой."
+            placeholder="Текст статьи - поддерживается простая разметка: ## заголовок H2, ### H3, строки с «- » для списка, «> » для цитаты/врезки, «Q: »/«A: » для пар вопрос-ответ (FAQ). Абзацы разделяйте пустой строкой."
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
             rows={10}
