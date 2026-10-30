@@ -8,8 +8,8 @@ import { Icon } from "./Icon";
 const tabs: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Главная", icon: "molecule" },
   { href: "/stati", label: "Статьи", icon: "list" },
-  { href: "/medikamentoznyj-abort/", label: "Справочник", icon: "clipboard" },
-  { href: "/calculators", label: "Калькулятор", icon: "calendar" },
+  { href: "/medikamentoznyj-abort/", label: "Справка", icon: "clipboard" },
+  { href: "/calculators", label: "Кальк.", icon: "calendar" },
   { href: "/kontakty", label: "Контакты", icon: "mail" },
 ];
 
@@ -22,7 +22,7 @@ export function MobileTabBar() {
       className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface)] border-t border-[var(--color-border)] md:hidden"
       aria-label="Основная навигация"
     >
-      <div className="flex justify-around">
+      <div className="flex justify-between gap-2">
         {tabs.map((tab) => {
           const active =
             pathname === tab.href || pathname.startsWith(`${tab.href}/`);
@@ -30,7 +30,7 @@ export function MobileTabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium leading-tight text-center transition-colors ${
+              className={`flex flex-1 min-w-0 flex-col items-center gap-1 py-2.5 text-[9px] font-medium leading-tight text-center whitespace-nowrap transition-colors ${
                 active
                   ? "text-[var(--color-accent-dark)]"
                   : "text-[var(--color-muted)]"
