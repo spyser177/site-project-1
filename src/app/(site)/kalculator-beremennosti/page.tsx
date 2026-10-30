@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/kalculator-beremennosti" },
 };
 
+// SSR на каждый запрос (как и другие страницы — см. next.config.ts/headers()).
+// Без этого Next.js пререндерит страницу статически при сборке и "запекает"
+// в HTML значение NEXT_PUBLIC_SITE_PHONE из Header/Footer на момент билда —
+// Cache-Control: no-store тут не поможет, т.к. HTML уже статичен.
+export const dynamic = "force-dynamic";
+
 export default function PregnancyCalculatorPage() {
   return (
     <Section animate={false} className="pt-14 sm:pt-20">

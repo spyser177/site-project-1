@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/test-na-beremennost" },
 };
 
+// SSR на каждый запрос — см. комментарий в kalculator-beremennosti/page.tsx.
+export const dynamic = "force-dynamic";
+
 export default function PregnancyTestPage() {
   return (
     <Section animate={false} className="pt-14 sm:pt-20">
