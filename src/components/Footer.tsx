@@ -58,6 +58,7 @@ export async function Footer() {
             <ul className="space-y-2 text-sm text-white/80">
               <li><Link href="/" className="hover:text-white">Главная</Link></li>
               <li><Link href="/stati" className="hover:text-white">Статьи</Link></li>
+              <li><Link href="/medikamentoznyj-abort/" className="hover:text-white">Справочник</Link></li>
               <li><Link href="/calculators" className="hover:text-white">Калькуляторы</Link></li>
               <li><Link href="/o-nas" className="hover:text-white">О нас</Link></li>
               <li><Link href="/kontakty" className="hover:text-white">Контакты</Link></li>

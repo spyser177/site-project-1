@@ -8,6 +8,7 @@ import { Icon } from "./Icon";
 const tabs: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Главная", icon: "molecule" },
   { href: "/stati", label: "Статьи", icon: "list" },
+  { href: "/medikamentoznyj-abort/", label: "Справочник", icon: "clipboard" },
   { href: "/calculators", label: "Калькуляторы", icon: "calendar" },
   { href: "/kontakty", label: "Контакты", icon: "mail" },
 ];
