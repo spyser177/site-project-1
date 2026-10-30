@@ -230,7 +230,7 @@ export default async function GlavnayaPage() {
           </h2>
           <p className="mt-4 text-[var(--color-muted)]">
             {cta.subtitle ||
-              "Свяжитесь с нами — ответим на общие вопросы и поможем разобраться, куда обратиться для очной консультации специалиста."}
+              "Свяжитесь с нами - ответим на общие вопросы и поможем разобраться, куда обратиться для очной консультации специалиста."}
           </p>
           <div className="mt-8">
             <Button href={cta.button_link || "/kontakty"} size="lg" variant="accent">

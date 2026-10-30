@@ -213,7 +213,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             Остались вопросы?
           </h2>
           <p className="mt-3 text-[var(--color-muted)]">
-            Свяжитесь с нами — поможем разобраться в общих вопросах о медикаментозном
+            Свяжитесь с нами - поможем разобраться в общих вопросах о медикаментозном
             прерывании беременности.
           </p>
           <div className="mt-6">
